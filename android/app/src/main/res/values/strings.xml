@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SharpJob</string>
+    <string name="title_activity_main">SharpJob</string>
+    <string name="package_name">com.player99inc.sharpjob</string>
+    <string name="custom_url_scheme">com.player99inc.sharpjob</string>
+</resources>

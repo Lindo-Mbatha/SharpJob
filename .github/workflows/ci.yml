@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  maintainability-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce architecture boundary PR policy
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+
+          DOC_PATH="docs/architecture-boundaries.md"
+          if [ ! -f "$DOC_PATH" ]; then
+            echo "::error::Required architecture note is missing: $DOC_PATH"
+            exit 1
+          fi
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+
+          if printf "%s\n" "$CHANGED_FILES" | grep -qx "src/App.tsx"; then
+            PR_BODY="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+
+            if ! printf "%s" "$PR_BODY" | grep -Eiq 'complexity[[:space:]-]*impact'; then
+              echo "::error::This PR changes src/App.tsx and must include a \"complexity impact\" note in the PR body."
+              exit 1
+            fi
+
+            IMPACT_LINE="$(printf "%s\n" "$PR_BODY" | grep -Ei 'complexity[[:space:]-]*impact' | head -n1 || true)"
+            if [ "${#IMPACT_LINE}" -lt 24 ]; then
+              NEXT_CONTENT="$(printf "%s\n" "$PR_BODY" | awk 'BEGIN{IGNORECASE=1} /complexity[[:space:]-]*impact/{found=1;next} found && NF{print;exit}')"
+              if [ "${#NEXT_CONTENT}" -lt 10 ]; then
+                echo "::error::Please add a brief complexity impact description after the \"complexity impact\" label."
+                exit 1
+              fi
+            fi
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm run test
+
+      - name: Coverage threshold for core domains
+        run: npm run test:coverage
+
+      - name: Save PR coverage summary
+        if: github.event_name == 'pull_request'
+        run: cp coverage/coverage-summary.json /tmp/pr-coverage-summary.json
+
+      - name: Checkout base revision
+        if: github.event_name == 'pull_request'
+        run: git checkout ${{ github.event.pull_request.base.sha }}
+
+      - name: Install dependencies (base)
+        if: github.event_name == 'pull_request'
+        run: npm ci
+
+      - name: Run coverage on base revision
+        if: github.event_name == 'pull_request'
+        run: npm run test:coverage
+
+      - name: Compare against moving baseline
+        if: github.event_name == 'pull_request'
+        run: |
+          cp coverage/coverage-summary.json /tmp/base-coverage-summary.json
+          git checkout ${{ github.sha }}
+          node scripts/compareCoverageBaseline.mjs /tmp/base-coverage-summary.json /tmp/pr-coverage-summary.json

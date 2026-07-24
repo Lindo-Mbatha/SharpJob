@@ -1,0 +1,24 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "install-backend-deps",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-backend-syntax",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"--check",
+				"src/server.js"
+			],
+			"isBackground": false
+		}
+	]
+}

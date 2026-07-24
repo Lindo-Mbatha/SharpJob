@@ -1,0 +1,767 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "install-test-deps",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install",
+				"--save-dev",
+				"vitest",
+				"@testing-library/react",
+				"@testing-library/jest-dom",
+				"jsdom"
+			]
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			]
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			]
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			]
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			]
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "install-ci-tooling",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install",
+				"-D",
+				"eslint",
+				"@eslint/js",
+				"typescript-eslint",
+				"eslint-plugin-react-hooks",
+				"eslint-plugin-react-refresh",
+				"globals",
+				"@vitest/coverage-v8"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "install-ci-tooling",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install",
+				"-D",
+				"eslint",
+				"@eslint/js",
+				"typescript-eslint",
+				"eslint-plugin-react-hooks",
+				"eslint-plugin-react-refresh",
+				"globals",
+				"@vitest/coverage-v8@2.1.9"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "install-ci-tooling-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install",
+				"-D",
+				"eslint",
+				"@eslint/js",
+				"typescript-eslint",
+				"eslint-plugin-react-hooks",
+				"eslint-plugin-react-refresh",
+				"globals",
+				"@vitest/coverage-v8@2.1.9"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-typecheck",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-test",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-coverage",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test:coverage"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-lint-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-typecheck-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-test-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-coverage-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test:coverage"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-lint-v3",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-typecheck-v3",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-test-v3",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "gate-coverage-v3",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test:coverage"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "final-lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "final-typecheck",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "final-test",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "final-coverage",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test:coverage"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-lint-after-baseline",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-typecheck-after-baseline",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-test-after-baseline",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-coverage-after-baseline",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test:coverage"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-baseline-script",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"scripts/compareCoverageBaseline.mjs",
+				"coverage/coverage-summary.json",
+				"coverage/coverage-summary.json"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-coverage-45-thresholds",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test:coverage"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-after-splash-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "install-monitoring-sdk",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install",
+				"@sentry/react"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-telemetry-lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-telemetry-typecheck",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-telemetry-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-telemetry-tests-clean",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-events-lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-events-typecheck",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-events-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-product-event-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-hardening-lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-hardening-typecheck",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-hardening-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-hardening-typecheck-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-hardening-tests-v2",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-help-content-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "install-app-review-plugin",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"install",
+				"@capawesome/capacitor-app-review"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-rateapp-lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-rateapp-typecheck",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"typecheck"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-rateapp-tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "sync-capacitor-plugins",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"cap",
+				"sync"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "verify-rateapp-unit-test",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"test"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "backend-install",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"--prefix",
+				"backend",
+				"install"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "backend-syntax-check",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"--check",
+				"backend/src/server.js"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "backend-jobs-check",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"--check",
+				"backend/src/routes/jobs.js"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "backend-me-check",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"--check",
+				"backend/src/routes/me.js"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "backend-admin-check",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"--check",
+				"backend/src/routes/admin.js"
+			],
+			"isBackground": false
+		}
+	]
+}
