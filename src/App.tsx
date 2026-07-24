@@ -475,7 +475,6 @@ export default function App() {
     { id: "5", title: "Saved Role Closing Soon ⏰", kind: "reminder", jobId: "job-5", desc: "Heads up — the Brand Strategist opening at Duolingo that you bookmarked closes in under 48 hours. If it's still on your shortlist, now's the moment: open the save-list, tap Details, and use the one-tap cover-letter generator to ship a polished application in about ninety seconds.", time: "5h ago", read: false },
     { id: "6", title: "Profile Strength: 98% 💪", kind: "profile", desc: "You're one step away from a perfect profile. Adding a single portfolio link or a short 'About me' blurb unlocks the 100% badge, which — according to our internal data — increases recruiter first-response rates by roughly 2.3x. Head to the Profile tab to finish it off.", time: "Yesterday", read: true }
   ]);
-  const [showNotificationsMenu, setShowNotificationsMenu] = useState<boolean>(false);
   const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(null);
   const [alertsFilter, setAlertsFilter] = useState<"all" | "unread">("all");
   // id of the job whose Apply Now is mid-handoff (button shows a spinner for ~650ms
@@ -538,6 +537,12 @@ export default function App() {
   // Simple visual confetti state
   const [confettiActive, setConfettiActive] = useState<boolean>(false);
 
+  // Live device status bar data.
+  const [batteryLevel, setBatteryLevel] = useState<number>(0.85);
+  const [batteryCharging, setBatteryCharging] = useState<boolean>(false);
+  const [networkLabel, setNetworkLabel] = useState<string>("Wi-Fi");
+  const [networkOnline, setNetworkOnline] = useState<boolean>(true);
+
   // Keep mobile mode active for portrait and landscape phones.
   const [isMobileView, setIsMobileView] = useState<boolean>(() => Math.min(window.innerWidth, window.innerHeight) < 640);
 
@@ -545,6 +550,66 @@ export default function App() {
     const handleResize = () => setIsMobileView(Math.min(window.innerWidth, window.innerHeight) < 640);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    let batteryManager: any = null;
+    const handleBatteryLevelChange = () => updateBattery(batteryManager);
+    const handleBatteryChargingChange = () => updateBattery(batteryManager);
+
+    function updateBattery(manager: any) {
+      setBatteryLevel(typeof manager?.level === "number" ? manager.level : 0.85);
+      setBatteryCharging(Boolean(manager?.charging));
+    }
+
+    const updateNetwork = () => {
+      const nav = navigator as Navigator & { connection?: any };
+      const connection = nav.connection;
+
+      setNetworkOnline(navigator.onLine);
+      if (!navigator.onLine) {
+        setNetworkLabel("OFF");
+        return;
+      }
+
+      const effectiveTypeMap: Record<string, string> = {
+        "slow-2g": "2G",
+        "2g": "2G",
+        "3g": "3G",
+        "4g": "4G"
+      };
+
+      setNetworkLabel(effectiveTypeMap[connection?.effectiveType] || (connection?.type === "wifi" ? "Wi-Fi" : "Online"));
+    };
+
+    updateNetwork();
+
+    const nav = navigator as Navigator & { getBattery?: () => Promise<any>; connection?: any };
+    if (nav.getBattery) {
+      nav.getBattery().then((manager) => {
+        batteryManager = manager;
+        updateBattery(manager);
+        manager.addEventListener("levelchange", handleBatteryLevelChange);
+        manager.addEventListener("chargingchange", handleBatteryChargingChange);
+      }).catch(() => {
+        batteryManager = null;
+      });
+    }
+
+    const updateNetworkBound = () => updateNetwork();
+    window.addEventListener("online", updateNetworkBound);
+    window.addEventListener("offline", updateNetworkBound);
+    nav.connection?.addEventListener?.("change", updateNetworkBound);
+
+    return () => {
+      window.removeEventListener("online", updateNetworkBound);
+      window.removeEventListener("offline", updateNetworkBound);
+      nav.connection?.removeEventListener?.("change", updateNetworkBound);
+      if (batteryManager) {
+        batteryManager.removeEventListener?.("levelchange", handleBatteryLevelChange);
+        batteryManager.removeEventListener?.("chargingchange", handleBatteryChargingChange);
+      }
+    };
   }, []);
 
   // Real clock effect in status bar
@@ -880,13 +945,14 @@ ${applicantName}`;
 
               {/* Status Icons */}
               <div className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.13 19.66 10.53 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm-1-8h2v5h-2zm0-3h2v2h-2z" />
-                </svg>
-                <span className="text-[10px] font-bold tracking-tighter">5G</span>
+                <Wifi className={`w-3.5 h-3.5 ${networkOnline ? (darkMode ? "text-slate-300" : "text-slate-600") : "text-rose-500"}`} />
+                <span className="text-[10px] font-bold tracking-tighter">{networkLabel}</span>
                 {/* Battery Icon */}
                 <div className="w-[18px] h-2.5 rounded border border-current p-[1px] flex items-center">
-                  <div className="h-full bg-current rounded-xs transition-all duration-300" style={{ width: "85%" }} />
+                  <div
+                    className={`h-full rounded-xs transition-all duration-300 ${batteryCharging ? "bg-emerald-500" : "bg-current"}`}
+                    style={{ width: `${Math.round(Math.max(0, Math.min(1, batteryLevel)) * 100)}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -943,18 +1009,6 @@ ${applicantName}`;
                         </div>
                       </div>
 
-                      {/* Notification Bell with Badge */}
-                      <button 
-                        onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
-                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all relative ${
-                          darkMode ? "bg-slate-900 hover:bg-slate-850" : "bg-slate-100 hover:bg-slate-200/80"
-                        }`}
-                      >
-                        <Bell className={`h-4.5 w-4.5 ${darkMode ? "text-slate-300" : "text-slate-600"}`} />
-                        {notifications.some(n => !n.read) && (
-                          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
-                        )}
-                      </button>
                     </div>
 
                     {/* Below That: Header text */}
@@ -967,84 +1021,6 @@ ${applicantName}`;
                       </p>
                     </div>
                   </div>
-
-                  {/* SUB-OVERLAY NOTIFICATION PANEL (When bell is clicked) */}
-                  {showNotificationsMenu && (
-                    <div className={`absolute top-24 left-4 right-4 z-40 rounded-xl border p-4 shadow-xl animate-fade-in ${
-                      darkMode ? "bg-slate-900 border-slate-800 text-slate-100" : "bg-white border-slate-200 text-slate-800"
-                    }`}>
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Notifications</span>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => {
-                              setNotifications(notifications.map(n => ({ ...n, read: true })));
-                            }} 
-                            className={`text-[10px] font-semibold ${activeAccent.text}`}
-                          >
-                            Mark all read
-                          </button>
-                          <button onClick={() => setShowNotificationsMenu(false)}>
-                            <X className="h-3.5 w-3.5 text-slate-400" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5 max-h-[240px] overflow-y-auto no-scrollbar -mx-1 px-1">
-                        {notifications.length === 0 ? (
-                          <p className="text-[11px] text-slate-400 text-center py-4">You're all caught up.</p>
-                        ) : notifications.slice(0, 4).map(n => (
-                          <button
-                            key={n.id}
-                            onClick={() => {
-                              setSelectedNotificationId(n.id);
-                              setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-                              setShowNotificationsMenu(false);
-                              setActiveTab("alerts");
-                            }}
-                            className={`w-full text-left p-2.5 rounded-lg text-xs leading-normal transition-all group relative border ${
-                              !n.read
-                                ? (darkMode ? "bg-slate-850 border-slate-800 hover:bg-slate-800" : "bg-slate-50 border-slate-100 hover:bg-slate-100/80")
-                                : (darkMode ? "bg-transparent border-transparent hover:bg-slate-900" : "bg-transparent border-transparent hover:bg-slate-50")
-                            }`}
-                          >
-                            {!n.read && (
-                              <span className={`absolute left-0 top-3 bottom-3 w-[2px] rounded-full ${activeAccent.primary}`} />
-                            )}
-                            <div className={`flex items-center justify-between gap-2 ${!n.read ? "pl-2" : ""}`}>
-                              <span className={`font-bold truncate ${darkMode ? "text-slate-200" : "text-slate-800"}`}>
-                                {n.title}
-                              </span>
-                              <span className="text-[9px] text-slate-400 shrink-0">{n.time}</span>
-                            </div>
-                            <p className={`mt-1 text-slate-500 line-clamp-2 ${!n.read ? "pl-2" : ""}`}>
-                              {n.desc}
-                            </p>
-                            <div className={`mt-1 flex items-center justify-between ${!n.read ? "pl-2" : ""}`}>
-                              <span className={`text-[9px] font-semibold uppercase tracking-wider ${activeAccent.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                                Tap to read
-                              </span>
-                              <ChevronRight className={`h-3 w-3 ${activeAccent.text} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      {notifications.length > 0 && (
-                        <button
-                          onClick={() => {
-                            setShowNotificationsMenu(false);
-                            setSelectedNotificationId(null);
-                            setActiveTab("alerts");
-                          }}
-                          className={`w-full mt-2 pt-2 border-t text-[11px] font-semibold flex items-center justify-center gap-1 ${
-                            darkMode ? "border-slate-800 text-slate-300" : "border-slate-100 text-slate-600"
-                          }`}
-                        >
-                          View all {notifications.length} alerts
-                          <ChevronRight className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  )}
 
                   {/* JOB CARDS CONTAINER */}
                   <div className="space-y-4 flex-1">
@@ -1801,14 +1777,30 @@ ${applicantName}`;
 
                   {/* Profile Quick Stats — Strength tile jumps into Edit Profile */}
                   <div className="grid grid-cols-3 gap-2 select-none">
-                    <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      aria-label="View applied jobs"
+                      title="View applied jobs"
+                      onClick={() => {
+                        setActiveTab("saved");
+                      }}
+                      className="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl text-center border border-slate-100 dark:border-slate-800 transition-all active:scale-[0.97] hover:border-emerald-300 dark:hover:border-emerald-700/60"
+                    >
                       <span className="block text-sm font-bold text-slate-800 dark:text-slate-100">{appliedJobs.length}</span>
                       <span className="text-[9px] text-slate-400 font-semibold">Applied</span>
-                    </div>
-                    <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="View saved jobs"
+                      title="View saved jobs"
+                      onClick={() => {
+                        setActiveTab("saved");
+                      }}
+                      className="p-2 bg-slate-50 dark:bg-slate-900 rounded-xl text-center border border-slate-100 dark:border-slate-800 transition-all active:scale-[0.97] hover:border-emerald-300 dark:hover:border-emerald-700/60"
+                    >
                       <span className="block text-sm font-bold text-slate-800 dark:text-slate-100">{savedJobs.length}</span>
                       <span className="text-[9px] text-slate-400 font-semibold">Saved</span>
-                    </div>
+                    </button>
                     <button
                       onClick={() => setProfileSubScreen("edit")}
                       className={`p-2 rounded-xl text-center border transition-all active:scale-[0.97] ${
