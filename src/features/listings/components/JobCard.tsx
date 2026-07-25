@@ -35,8 +35,16 @@ export function JobCard({
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 ${catStyle.bg}`}>
-          <CatIcon className="h-5 w-5" />
+        <div className={`w-10 h-10 rounded-lg border flex items-center justify-center shrink-0 overflow-hidden ${catStyle.bg}`}>
+          {job.companyLogoUrl ? (
+            <img
+              src={job.companyLogoUrl}
+              alt={job.company}
+              className="w-full h-full object-contain p-1"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; (e.currentTarget.nextSibling as HTMLElement | null)?.removeAttribute("hidden"); }}
+            />
+          ) : null}
+          <span hidden={Boolean(job.companyLogoUrl)}><CatIcon className="h-5 w-5" /></span>
         </div>
         <div className="min-w-0 flex-1">
           <h4 className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-slate-800"}`}>
@@ -69,17 +77,17 @@ export function JobCard({
       </div>
 
       <div className="grid grid-cols-3 gap-2 mt-3.5 pt-0.5 text-[11px] text-slate-500 select-none">
-        <div className="flex items-center gap-1 min-w-0">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span className="truncate">{job.location.split("(")[0].trim()}</span>
+        <div className="flex items-start gap-1">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
+          <span className="line-clamp-2 leading-snug">{job.location.split("(")[0].trim()}</span>
         </div>
-        <div className="flex items-center gap-1 min-w-0 justify-center">
-          <Briefcase className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span className="truncate">{job.type}</span>
+        <div className="flex items-start gap-1 justify-center">
+          <Briefcase className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
+          <span className="line-clamp-2 leading-snug text-center">{job.type}</span>
         </div>
-        <div className="flex items-center gap-1 min-w-0 justify-end font-medium text-slate-600 dark:text-slate-400">
-          <Banknote className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span className="truncate">{job.salary.includes("/yr") ? job.salary.replace(" /yr", "").split(" - ")[0] : job.salary.split(" ")[0]}</span>
+        <div className="flex items-start gap-1 justify-end font-medium text-slate-600 dark:text-slate-400">
+          <Banknote className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
+          <span className="line-clamp-2 leading-snug text-right">{job.salary}</span>
         </div>
       </div>
 

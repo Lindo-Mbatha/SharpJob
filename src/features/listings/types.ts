@@ -11,6 +11,7 @@ export interface Job {
   responsibilities: string[];
   requirements: string[];
   companyBio: string;
+  companyLogoUrl?: string;
   isSaved?: boolean;
   isApplied?: boolean;
   appliedStatus?: "Submitted" | "Screening" | "Interviewing" | "Offer Given" | "Archived";

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import sharpJobLogo from "./assets/sharpjobreallogo.png";
 import splashBackground from "./assets/backgroundblue.jpg";
 import { LISTINGS_PER_PAGE } from "./features/listings/constants";
-import { INITIAL_JOBS } from "./features/listings/mockData";
+import { useJobs } from "./features/listings/useJobs";
 import { Job, PreviousSavedListing } from "./features/listings/types";
 import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings } from "./features/listings/utils";
 import { countAppliedJobs, countSavedVisible, paginateItems } from "./features/listings/selectors";
@@ -214,13 +214,19 @@ export default function App() {
   const [showSplash, setShowSplash] = useState<boolean>(shouldShowInitialSplash);
   const [isSplashFading, setIsSplashFading] = useState<boolean>(false);
 
-  // Dynamic lists
-  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
+  // Dynamic lists — loaded from Supabase
+  const { jobs, setJobs, loadState: jobsLoadState, error: jobsError } = useJobs();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const [homePage, setHomePage] = useState<number>(1);
   const [savedPage, setSavedPage] = useState<number>(1);
   const [showPreviousListings, setShowPreviousListings] = useState<boolean>(false);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Set selected accent styles
   const activeAccent = ACCENTS[accentColor] || ACCENTS.blue;
@@ -371,6 +377,10 @@ export default function App() {
     setHomePage(prev => Math.min(prev, homePagination.totalPages));
   }, [homePagination.totalPages]);
 
+  useEffect(() => { scrollToTop(); }, [homePage]);
+  useEffect(() => { scrollToTop(); }, [explorePage]);
+  useEffect(() => { scrollToTop(); }, [savedPage]);
+
   useEffect(() => {
     setExplorePage(prev => Math.min(prev, explorePagination.totalPages));
   }, [explorePagination.totalPages, setExplorePage]);
@@ -490,8 +500,33 @@ export default function App() {
             />
 
             {/* 3. APP SCREEN BODY (DYNAMIC BY TAB) */}
-            <div className={`flex-1 overflow-y-auto no-scrollbar flex flex-col ${isMobileView ? "pb-20" : "pb-16"} relative`}>
-              
+            <div ref={scrollContainerRef} className={`flex-1 overflow-y-auto no-scrollbar flex flex-col ${isMobileView ? "pb-20" : "pb-16"} relative`}>
+
+              {/* JOBS LOADING / ERROR STATE */}
+              {jobsLoadState === "loading" && (
+                <div className="flex-1 flex items-center justify-center py-24">
+                  <div className="text-center space-y-2">
+                    <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto ${darkMode ? "border-slate-400" : "border-slate-400"}`} />
+                    <p className={`text-xs font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Loading jobs…</p>
+                  </div>
+                </div>
+              )}
+
+              {jobsLoadState === "error" && (
+                <div className="flex-1 flex items-center justify-center py-24">
+                  <div className="text-center space-y-2 px-8">
+                    <p className={`text-sm font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Could not load jobs</p>
+                    <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Check your connection and try again.</p>
+                    {import.meta.env.DEV && jobsError && (
+                      <p className="text-[10px] text-red-400 mt-1 break-words max-w-xs mx-auto font-mono">{jobsError}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {jobsLoadState === "success" && (
+              <>
+
               {/* HOME TAB SCREEN */}
               {activeTab === "home" && (
                 <HomeTabScreen
@@ -670,6 +705,9 @@ export default function App() {
                   onRateApp={onRateApp}
                   triggerNotification={triggerNotification}
                 />
+              )}
+
+              </> /* end jobsLoadState === "success" */
               )}
 
             </div>
