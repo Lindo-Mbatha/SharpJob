@@ -37,30 +37,39 @@ ${applicantName}`;
   };
 
   const handleMockUpload = () => {
-    setIsUploading(true);
-    setUploadProgress(10);
-    const interval = window.setInterval(() => {
-      try {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            window.clearInterval(interval);
-            setIsUploading(false);
-            setUploadedResume("Alex_CV_SharpJob_Tailored.pdf");
-            return 100;
-          }
-          return prev + 30;
-        });
-      } catch (error) {
-        window.clearInterval(interval);
-        setIsUploading(false);
-        captureRecoverableError(
-          error,
-          triggerNotification,
-          "apply_flow_upload",
-          "Resume upload failed. Please try again."
-        );
-      }
-    }, 300);
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf,.doc,.docx";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      setIsUploading(true);
+      setUploadProgress(10);
+      const interval = window.setInterval(() => {
+        try {
+          setUploadProgress(prev => {
+            if (prev >= 100) {
+              window.clearInterval(interval);
+              setIsUploading(false);
+              setUploadedResume(file.name);
+              triggerNotification(`Resume "${file.name}" uploaded successfully.`);
+              return 100;
+            }
+            return prev + 30;
+          });
+        } catch (error) {
+          window.clearInterval(interval);
+          setIsUploading(false);
+          captureRecoverableError(
+            error,
+            triggerNotification,
+            "apply_flow_upload",
+            "Resume upload failed. Please try again."
+          );
+        }
+      }, 300);
+    };
+    input.click();
   };
 
   const handleRemoveResumeFromWizard = () => {
