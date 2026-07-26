@@ -809,7 +809,7 @@ export function ProfileTabScreen({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Talk to a human</p>
                 <div className="space-y-2">
                   {[
-                    { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Player99Inc@gmail.com" },
+                    { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Hello@sharpjob.co.za" },
                     { icon: Headphones, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Live chat", meta: "Coming soon" },
                     { icon: Phone, wrap: "bg-amber-50 text-amber-600 border-amber-100", title: "Call us", meta: "No phone number yet." },
                     { icon: MessageCircle, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "Community forum", meta: "Coming soon." }
@@ -817,7 +817,7 @@ export function ProfileTabScreen({
                     const CIcon = c.icon;
                     const handleContactClick = () => {
                       if (c.title === "Email us") {
-                        window.open("mailto:Player99Inc@gmail.com", "_blank");
+                        window.open("mailto:Hello@sharpjob.co.za", "_blank");
                       } else {
                         triggerNotification(`Opening ${c.title.toLowerCase()}...`);
                       }
@@ -864,7 +864,7 @@ export function ProfileTabScreen({
                 <button onClick={() => {
                   const subject = encodeURIComponent("SharpJob App Feedback");
                   const body = encodeURIComponent(feedbackText);
-                  window.open(`mailto:Player99Inc@gmail.com?subject=${subject}&body=${body}`, "_blank");
+                  window.open(`mailto:Hello@sharpjob.co.za?subject=${subject}&body=${body}`, "_blank");
                   triggerNotification("Opening your email client...");
                   setFeedbackText("");
                 }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
