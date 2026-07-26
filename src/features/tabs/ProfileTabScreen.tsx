@@ -809,14 +809,21 @@ export function ProfileTabScreen({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Talk to a human</p>
                 <div className="space-y-2">
                   {[
-                    { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Player99Inc@gmail.com - replies < 1 business day" },
-                    { icon: Headphones, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Live chat", meta: "Mon-Fri - 08:00-16:00 SAST" },
+                    { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Player99Inc@gmail.com" },
+                    { icon: Headphones, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Live chat", meta: "Coming soon" },
                     { icon: Phone, wrap: "bg-amber-50 text-amber-600 border-amber-100", title: "Call us", meta: "No phone number yet." },
                     { icon: MessageCircle, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "Community forum", meta: "Coming soon." }
                   ].map(c => {
                     const CIcon = c.icon;
+                    const handleContactClick = () => {
+                      if (c.title === "Email us") {
+                        window.open("mailto:Player99Inc@gmail.com", "_blank");
+                      } else {
+                        triggerNotification(`Opening ${c.title.toLowerCase()}...`);
+                      }
+                    };
                     return (
-                      <button key={c.title} onClick={() => triggerNotification(`Opening ${c.title.toLowerCase()}...`)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
+                      <button key={c.title} onClick={handleContactClick} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
                         <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${c.wrap}`}><CIcon className="h-4 w-4" /></div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{c.title}</p>
@@ -831,13 +838,13 @@ export function ProfileTabScreen({
 
               <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
-              <button onClick={onRateApp} className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
+              <button onClick={() => window.open("https://play.google.com/store/apps/details?id=com.player99.sharpjob", "_blank")} className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-lg border bg-amber-50 text-amber-600 border-amber-100 flex items-center justify-center shrink-0"><Star className="h-4 w-4 fill-current" /></div>
                   <div><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Rate SharpJob</p><p className="text-[11px] text-slate-500">Takes 10 seconds. Helps a lot.</p></div>
                 </div>
                 <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className={`h-3.5 w-3.5 ${i <= 4 ? "text-amber-400 fill-current" : "text-slate-300"}`} />)}
+                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3.5 w-3.5 text-amber-400 fill-current" />)}
                 </div>
               </button>
 
@@ -854,7 +861,13 @@ export function ProfileTabScreen({
             </div>
             {feedbackText.trim() && (
               <div className={`p-3 border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
-                <button onClick={() => { triggerNotification("Thanks - your feedback reached the Player99 team."); setFeedbackText(""); }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
+                <button onClick={() => {
+                  const subject = encodeURIComponent("SharpJob App Feedback");
+                  const body = encodeURIComponent(feedbackText);
+                  window.open(`mailto:Player99Inc@gmail.com?subject=${subject}&body=${body}`, "_blank");
+                  triggerNotification("Opening your email client...");
+                  setFeedbackText("");
+                }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
                   <Send className="h-4 w-4" /> Send feedback
                 </button>
               </div>
