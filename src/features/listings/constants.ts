@@ -1,8 +1,8 @@
 export const EXPERIENCE_SALARY_BANDS = {
-  Entry: { min: 65, max: 145 },
-  Mid: { min: 146, max: 325 },
-  Senior: { min: 326, max: 465 },
-  Executive: { min: 466, max: Number.POSITIVE_INFINITY }
+  Entry: { min: 72, max: 180 },
+  Low: { min: 120, max: 240 },
+  Mid: { min: 216, max: 420 },
+  Senior: { min: 360, max: Number.POSITIVE_INFINITY }
 } as const;
 
 export const LISTINGS_PER_PAGE = 20;

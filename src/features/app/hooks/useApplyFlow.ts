@@ -15,7 +15,7 @@ export function useApplyFlow({
 }) {
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [applyStep, setApplyStep] = useState<number>(1);
-  const [uploadedResume, setUploadedResume] = useState<string | null>("Alex_Mercer_CV_2026.pdf");
+  const [uploadedResume, setUploadedResume] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [coverLetterText, setCoverLetterText] = useState<string>("");

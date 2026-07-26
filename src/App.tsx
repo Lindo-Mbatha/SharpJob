@@ -380,6 +380,7 @@ export default function App() {
   useEffect(() => { scrollToTop(); }, [homePage]);
   useEffect(() => { scrollToTop(); }, [explorePage]);
   useEffect(() => { scrollToTop(); }, [savedPage]);
+  useEffect(() => { scrollToTop(); }, [activeTab]);
 
   useEffect(() => {
     setExplorePage(prev => Math.min(prev, explorePagination.totalPages));
@@ -632,6 +633,7 @@ export default function App() {
                   savedVisibleCount={savedVisibleCount}
                   profileStrengthLabel={profileStrengthLabel}
                   profileSubScreen={profileSubScreen}
+                  jobs={jobs}
                   applicantName={applicantName}
                   applicantEmail={applicantEmail}
                   applicantPhone={applicantPhone}

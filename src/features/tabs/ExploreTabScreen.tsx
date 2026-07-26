@@ -98,7 +98,7 @@ export function ExploreTabScreen({
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-          {["All", "Design", "Engineering", "Marketing"].map(cat => {
+          {["All", "Accountant", "Admin", "Analyst", "Artisan", "Assistant", "Chef", "Clerk", "Construction", "Design", "Director", "Driver", "Engineering", "Finance", "Handyman", "Healthcare", "Human Resource", "Inspector", "Internship", "IT Support", "Learnership", "Logistics", "Manager", "Marketing", "Nurse", "Officer", "Sales", "Supervisor", "Surveyor", "Technician", "Teacher", "Trades"].map(cat => {
             const isSelected = exploreCategory === cat;
             return (
               <button
@@ -120,7 +120,7 @@ export function ExploreTabScreen({
 
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mr-1">Type:</span>
-          {["All", "Full-time", "Contract", "Remote", "Hybrid"].map(type => {
+          {["All", "Full-time", "Part-time", "Contract", "Remote", "Hybrid"].map(type => {
             const isSelected = exploreType === type;
             return (
               <button

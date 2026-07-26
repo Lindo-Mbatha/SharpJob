@@ -5,6 +5,33 @@ import { getCategoryStyles } from "../utils";
 
 type JobCardVariant = "default" | "saved";
 
+// Extract just the salary range, removing metadata like "per annum", "level", etc
+function extractSalaryPreview(salary: string): string {
+  if (!salary) return "";
+  const keywords = [" per ", " annum", " level", ", level"];
+  let result = salary;
+  
+  for (const keyword of keywords) {
+    const idx = result.toLowerCase().indexOf(keyword.toLowerCase());
+    if (idx !== -1) {
+      result = result.substring(0, idx).trim();
+      break;
+    }
+  }
+  
+  return result;
+}
+
+// Validate employment type, return "Unspecified" if not a standard value
+function validateEmploymentType(type: string): string {
+  const validTypes = ["Full-time", "Full Time", "Contract", "Part-time", "Part Time", "Hybrid", "Remote"];
+  if (!type) return "Unspecified";
+  
+  // Check if it matches a valid type (case-insensitive)
+  const normalized = validTypes.find(t => t.toLowerCase() === type.toLowerCase());
+  return normalized || "Unspecified";
+}
+
 export function JobCard({
   job,
   darkMode,
@@ -83,11 +110,11 @@ export function JobCard({
         </div>
         <div className="flex items-start gap-1 justify-center">
           <Briefcase className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
-          <span className="line-clamp-2 leading-snug text-center">{job.type}</span>
+          <span className="line-clamp-2 leading-snug text-center">{validateEmploymentType(job.type)}</span>
         </div>
         <div className="flex items-start gap-1 justify-end font-medium text-slate-600 dark:text-slate-400">
           <Banknote className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
-          <span className="line-clamp-2 leading-snug text-right">{job.salary}</span>
+          <span className="line-clamp-2 leading-snug text-right">{extractSalaryPreview(job.salary)}</span>
         </div>
       </div>
 

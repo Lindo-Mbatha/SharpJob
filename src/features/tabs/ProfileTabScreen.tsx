@@ -138,6 +138,7 @@ export function ProfileTabScreen({
   savedVisibleCount,
   profileStrengthLabel,
   profileSubScreen,
+  jobs,
   applicantName,
   applicantEmail,
   applicantPhone,
@@ -222,6 +223,7 @@ export function ProfileTabScreen({
   savedVisibleCount: number;
   profileStrengthLabel: string;
   profileSubScreen: ProfileSubScreen;
+  jobs: Job[];
   applicantName: string;
   applicantEmail: string;
   applicantPhone: string;
@@ -424,6 +426,16 @@ export function ProfileTabScreen({
             title="Edit Profile"
             onBackLabel="Profile"
             onBack={() => {
+              // Check if headline was updated and trigger job match notification
+              if (applicantHeadline.trim()) {
+                const matchingJobs = jobs.filter(job => 
+                  applicantHeadline.toLowerCase().includes(job.title.toLowerCase()) ||
+                  job.title.toLowerCase().includes(applicantHeadline.toLowerCase())
+                );
+                if (matchingJobs.length > 0) {
+                  triggerNotification(`Found ${matchingJobs.length} role${matchingJobs.length !== 1 ? 's' : ''} matching your position "${applicantHeadline}"!`);
+                }
+              }
               onProfileSaved();
               triggerNotification("Your profile details were saved.");
               setProfileSubScreen(null);

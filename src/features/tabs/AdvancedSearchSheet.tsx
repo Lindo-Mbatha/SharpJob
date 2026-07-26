@@ -226,7 +226,7 @@ export function AdvancedSearchSheet({
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200">
                 <Info className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 <p>
-                  <strong>{advExp} overrides every other filter.</strong> Results will only show roles with starting salaries in the {activeExperienceBand.max === Number.POSITIVE_INFINITY ? "R466,000+" : `R${activeExperienceBand.min.toLocaleString()} - R${activeExperienceBand.max.toLocaleString()}`} compensation band.
+                  <strong>{advExp} overrides every other filter.</strong> Results will only show roles with starting salaries in the {activeExperienceBand.max === Number.POSITIVE_INFINITY ? `R${(activeExperienceBand.min * 1000).toLocaleString()}+` : `R${(activeExperienceBand.min * 1000).toLocaleString()} – R${(activeExperienceBand.max * 1000).toLocaleString()}`} compensation band.
                 </p>
               </div>
             )}
