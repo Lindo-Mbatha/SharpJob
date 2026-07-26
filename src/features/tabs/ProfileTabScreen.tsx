@@ -855,7 +855,15 @@ export function ProfileTabScreen({
 
               <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
                 {["Terms", "Privacy", "Cookies", "POPIA"].map(l => (
-                  <button key={l} onClick={() => triggerNotification(`Opening ${l} policy...`)} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline">{l}</button>
+                  <button key={l} onClick={() => {
+                    if (l === "Privacy") {
+                      window.open("https://sharp-job-cp7p.vercel.app/privacy-policy.html", "_blank");
+                    } else if (l === "POPIA") {
+                      window.open("https://popia.co.za/", "_blank");
+                    } else {
+                      triggerNotification(`Opening ${l} policy...`);
+                    }
+                  }} className="text-[10px] font-bold text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline">{l}</button>
                 ))}
               </div>
             </div>
