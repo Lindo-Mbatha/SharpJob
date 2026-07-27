@@ -810,9 +810,9 @@ export function ProfileTabScreen({
                 <div className="space-y-2">
                   {[
                     { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Hello@sharpjob.co.za" },
-                    { icon: Headphones, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Live chat", meta: "Coming soon" },
+                    { icon: Headphones, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Live chat", meta: "Coming in future updates" },
                     { icon: Phone, wrap: "bg-amber-50 text-amber-600 border-amber-100", title: "Call us", meta: "No phone number yet." },
-                    { icon: MessageCircle, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "Community forum", meta: "Coming soon." }
+                    { icon: MessageCircle, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "Community forum", meta: "Coming in future updates." }
                   ].map(c => {
                     const CIcon = c.icon;
                     const handleContactClick = () => {
