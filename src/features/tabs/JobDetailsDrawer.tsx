@@ -1,8 +1,48 @@
 import React from "react";
-import { ArrowLeft, Bookmark, Calendar, Check, ExternalLink, Info, Loader2, Share2, X } from "lucide-react";
+import { ArrowLeft, Bookmark, Calendar, Check, ExternalLink, Info, Loader2, Share2, ShieldAlert, X } from "lucide-react";
 import { Job } from "../listings/types";
 import { getCategoryStyles } from "../listings/utils";
 import { ApplyOutboundMode } from "../app/types/domain";
+
+const GOV_HOSTNAME_PATTERNS = [
+  ".gov.za",
+  "easternca pe.gov",
+  "freestate.gov",
+  "gauteng.gov",
+  "kwazulunatal.gov",
+  "kzn.gov",
+  "limpopo.gov",
+  "mpumalanga.gov",
+  "northerncape.gov",
+  "northwest.gov",
+  "nw.gov",
+  "westerncape.gov",
+  "wcg.gov"
+];
+
+const GOV_URL_KEYWORDS = [
+  "gov.za",
+  "eastern-cape", "easterncape",
+  "free-state", "freestate",
+  "gauteng",
+  "kwazulu-natal", "kwazulunatal", "kzn",
+  "limpopo",
+  "mpumalanga",
+  "northern-cape", "northerncape",
+  "north-west", "northwest",
+  "western-cape", "westerncape", "wcg"
+];
+
+const isGovListing = (job: Job): boolean => {
+  try {
+    const url = new URL(job.applyUrl ?? "");
+    const full = url.hostname + url.pathname;
+    return GOV_HOSTNAME_PATTERNS.some(p => url.hostname.endsWith(p)) ||
+      GOV_URL_KEYWORDS.some(k => full.toLowerCase().includes(k));
+  } catch {
+    return false;
+  }
+};
 
 export function JobDetailsDrawer({
   darkMode,
@@ -29,6 +69,7 @@ export function JobDetailsDrawer({
   onConfirmApplied: (applied: boolean) => void;
   applyWizardSheet?: React.ReactNode;
 }) {
+  const isGov = isGovListing(selectedJob);
   return (
     <div className={`absolute inset-0 z-40 flex flex-col animate-slide-up ${
       darkMode ? "bg-slate-950 text-slate-100" : "bg-white text-slate-800"
@@ -146,6 +187,15 @@ export function JobDetailsDrawer({
               &ldquo;{selectedJob.companyBio}&rdquo;
             </p>
           </div>
+
+          {isGov && (
+            <div className="flex items-start gap-2.5 p-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/60 dark:bg-amber-950/30">
+              <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-200">
+                Government job listings are independently aggregated from public sources. SharpJob is not a government entity.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -227,6 +277,11 @@ export function JobDetailsDrawer({
               <>
                 <ExternalLink className="h-3.5 w-3.5" />
                 Re-open application
+              </>
+            ) : isGov ? (
+              <>
+                <ExternalLink className="h-3.5 w-3.5" />
+                View official government notice
               </>
             ) : (
               <>

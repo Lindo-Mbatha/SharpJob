@@ -416,8 +416,19 @@ export function ProfileTabScreen({
         </div>
 
         <p className="text-center text-[10px] text-slate-400 pt-1 pb-2">
-          SharpJob v1.2 - by Player99 Inc
+          SharpJob v{__APP_VERSION__} - by Player99 Inc
         </p>
+
+        <div className={`mx-1 mb-4 p-3 rounded-xl border text-[10px] leading-relaxed space-y-2 ${darkMode ? "bg-slate-900/60 border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"}`}>
+          <p>
+            <span className="font-bold text-slate-500 dark:text-slate-300">Government listings — </span>
+            SharpJob is an independent job listing platform and is not affiliated with, endorsed by, or officially representing any government department or entity. Government job listings are aggregated from publicly available official sources, with direct links provided to each original listing.
+          </p>
+          <p>
+            <span className="font-bold text-slate-500 dark:text-slate-300">Private company listings — </span>
+            SharpJob is not affiliated with, endorsed by, or acting on behalf of any private company or employer featured on this platform. Job listings from private companies are aggregated from publicly available sources. SharpJob does not guarantee the accuracy, completeness, or availability of any listing and is not responsible for the hiring decisions or conduct of any employer.
+          </p>
+        </div>
       </div>
 
       {profileSubScreen === "edit" && (

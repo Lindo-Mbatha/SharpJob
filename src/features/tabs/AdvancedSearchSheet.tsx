@@ -99,7 +99,7 @@ export function AdvancedSearchSheet({
                 type="text"
                 value={advLocation}
                 onChange={e => setAdvLocation(e.target.value)}
-                placeholder="City, state, or remote"
+                placeholder="City, province, or remote"
                 className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 ${
                   darkMode ? "bg-slate-900 border-slate-800 text-white focus:border-slate-700" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-300"
                 }`}
