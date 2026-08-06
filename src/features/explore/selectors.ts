@@ -58,6 +58,25 @@ function matchesCategoryByTitle(jobTitle: string, category: string): boolean {
   return keywords.some(keyword => lowerTitle.includes(keyword));
 }
 
+function normalizeEmploymentType(value: string): string {
+  const normalized = value.toLowerCase().trim();
+  const contains = (keywords: string[]) => keywords.some(keyword => normalized.includes(keyword));
+
+  if (contains(["internship", "intern ", "intern-"])) return "Internship";
+  if (contains(["part-time", "part time"])) return "Part-time";
+  if (contains(["remote", "work from home", "wfh"])) return "Remote";
+  if (contains(["hybrid"])) return "Hybrid";
+  if (contains(["contract", "fixed-term", "fixed term", "temporary"])) return "Contract";
+  if (contains(["permanent", "full-time", "full time"])) return "Permanent";
+
+  return "Unspecified";
+}
+
+function matchesExploreType(jobType: string, selectedType: string): boolean {
+  if (selectedType === "All") return true;
+  return normalizeEmploymentType(jobType) === selectedType;
+}
+
 export function filterExploreJobs(activeJobs: Job[], input: ExploreSelectorInput): Job[] {
   const activeExperienceBand = input.advExp ? EXPERIENCE_SALARY_BANDS[input.advExp] : null;
   const isExperienceSearchActive = input.isAdvSearchApplied && activeExperienceBand !== null;
@@ -73,7 +92,7 @@ export function filterExploreJobs(activeJobs: Job[], input: ExploreSelectorInput
     const matchesCategory = input.exploreCategory === "All" || 
       job.category === input.exploreCategory ||
       matchesCategoryByTitle(job.title || "", input.exploreCategory);
-    const matchesType = input.exploreType === "All" || job.type === input.exploreType;
+    const matchesType = matchesExploreType(job.type || "", input.exploreType);
 
     const jobMinSalaryStr = job.salary.split("-")[0].replace(/[^0-9]/g, "");
     const jobMinSalary = jobMinSalaryStr ? parseInt(jobMinSalaryStr) / 1000 : 0;

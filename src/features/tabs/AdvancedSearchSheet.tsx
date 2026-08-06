@@ -110,19 +110,26 @@ export function AdvancedSearchSheet({
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Job type</label>
             <div className="flex flex-wrap gap-2">
-              {["Full-time", "Contract", "Remote", "Hybrid"].map(type => {
-                const isActive = advTypes.includes(type);
+              {[
+                { label: "Permanent", value: "Full-time" },
+                { label: "Part-time", value: "Part-time" },
+                { label: "Contract", value: "Contract" },
+                { label: "Remote", value: "Remote" },
+                { label: "Internship", value: "Internship" },
+                { label: "Hybrid", value: "Hybrid" }
+              ].map(({ label, value }) => {
+                const isActive = advTypes.includes(value);
                 return (
                   <button
-                    key={type}
-                    onClick={() => setAdvTypes(prev => isActive ? prev.filter(t => t !== type) : [...prev, type])}
+                    key={value}
+                    onClick={() => setAdvTypes(prev => isActive ? prev.filter(t => t !== value) : [...prev, value])}
                     className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
                       isActive
                         ? `${activeAccentPrimary} text-white border-transparent`
                         : darkMode ? "border-slate-800 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    {type}
+                    {label}
                   </button>
                 );
               })}

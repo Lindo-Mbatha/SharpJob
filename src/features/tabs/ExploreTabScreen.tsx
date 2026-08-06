@@ -49,9 +49,89 @@ export function ExploreTabScreen({
   onSelectPage: (page: number) => void;
   onResetFilters: () => void;
 }) {
+  const DRAG_ACTIVATION_THRESHOLD = 8;
+
+  const dragStateRef = React.useRef<{
+    active: boolean;
+    pointerId: number | null;
+    startX: number;
+    startScrollLeft: number;
+    target: HTMLDivElement | null;
+    moved: boolean;
+  }>({
+    active: false,
+    pointerId: null,
+    startX: 0,
+    startScrollLeft: 0,
+    target: null,
+    moved: false
+  });
+  const suppressClickRef = React.useRef(false);
+
+  const onHorizontalWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+      event.currentTarget.scrollLeft += event.deltaY;
+      event.preventDefault();
+    }
+  };
+
+  const onHorizontalPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    const target = event.currentTarget;
+    dragStateRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: target.scrollLeft,
+      target,
+      moved: false
+    };
+  };
+
+  const onHorizontalPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag.active || drag.pointerId !== event.pointerId || drag.target !== event.currentTarget) return;
+
+    const deltaX = event.clientX - drag.startX;
+    if (!drag.moved && Math.abs(deltaX) < DRAG_ACTIVATION_THRESHOLD) {
+      return;
+    }
+
+    if (!drag.moved) {
+      drag.moved = true;
+      suppressClickRef.current = true;
+    }
+
+    event.currentTarget.scrollLeft = drag.startScrollLeft - deltaX;
+    event.preventDefault();
+  };
+
+  const onHorizontalPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragStateRef.current;
+    if (!drag.active || drag.pointerId !== event.pointerId || drag.target !== event.currentTarget) return;
+
+    dragStateRef.current = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      startScrollLeft: 0,
+      target: null,
+      moved: false
+    };
+  };
+
+  const onHorizontalClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (suppressClickRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClickRef.current = false;
+    }
+  };
+
   return (
-    <div className="p-5 space-y-4 flex-1 flex flex-col">
-      <div>
+    <div className="p-5 flex-1 flex flex-col gap-4 min-h-0">
+      <div className="shrink-0">
         <h2 className={`text-xl font-bold tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
           Explore Jobs
         </h2>
@@ -60,7 +140,7 @@ export function ExploreTabScreen({
         </p>
       </div>
 
-      <div className="space-y-2 select-none">
+      <div className="space-y-2 select-none shrink-0">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -97,14 +177,23 @@ export function ExploreTabScreen({
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+        <div
+          className="flex items-center gap-1.5 overflow-x-scroll overflow-y-hidden no-scrollbar py-1 cursor-grab active:cursor-grabbing"
+          onWheel={onHorizontalWheel}
+          onPointerDown={onHorizontalPointerDown}
+          onPointerMove={onHorizontalPointerMove}
+          onPointerUp={onHorizontalPointerEnd}
+          onPointerCancel={onHorizontalPointerEnd}
+          onClickCapture={onHorizontalClickCapture}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
+        >
           {["All", "Accountant", "Admin", "Analyst", "Artisan", "Assistant", "Chef", "Clerk", "Construction", "Design", "Director", "Driver", "Engineering", "Finance", "Handyman", "Healthcare", "Human Resource", "Inspector", "Internship", "IT Support", "Learnership", "Logistics", "Manager", "Marketing", "Nurse", "Officer", "Sales", "Supervisor", "Surveyor", "Technician", "Teacher", "Trades"].map(cat => {
             const isSelected = exploreCategory === cat;
             return (
               <button
                 key={cat}
                 onClick={() => setExploreCategory(cat)}
-                className={`px-3 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap border transition-all ${
+                className={`px-3 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0 border transition-all ${
                   isSelected
                     ? `${activeAccentPrimary} border-transparent text-white`
                     : darkMode
@@ -118,63 +207,86 @@ export function ExploreTabScreen({
           })}
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mr-1">Type:</span>
-          {["All", "Full-time", "Part-time", "Contract", "Remote", "Hybrid"].map(type => {
-            const isSelected = exploreType === type;
+        <div
+          className="flex items-center gap-1.5 overflow-x-scroll overflow-y-hidden no-scrollbar py-0.5 cursor-grab active:cursor-grabbing"
+          onWheel={onHorizontalWheel}
+          onPointerDown={onHorizontalPointerDown}
+          onPointerMove={onHorizontalPointerMove}
+          onPointerUp={onHorizontalPointerEnd}
+          onPointerCancel={onHorizontalPointerEnd}
+          onClickCapture={onHorizontalClickCapture}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
+        >
+          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mr-1 shrink-0">Type:</span>
+          {[
+            { label: "All", value: "All" },
+            { label: "Permanent", value: "Permanent" },
+            { label: "Contract", value: "Contract" },
+            { label: "Remote", value: "Remote" },
+            { label: "Internship", value: "Internship" },
+            { label: "Hybrid", value: "Hybrid" },
+            { label: "Part-time", value: "Part-time" }
+          ].map(({ label, value }) => {
+            const isSelected = exploreType === value;
             return (
               <button
-                key={type}
-                onClick={() => setExploreType(type)}
-                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+                key={value}
+                onClick={() => setExploreType(value)}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${
                   isSelected
                     ? "bg-slate-800 text-white border-b-2 border-slate-400"
                     : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                {type}
+                {label}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="space-y-4 flex-1">
-        {filteredJobs.length > 0 ? (
-          exploreJobsPage.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              darkMode={darkMode}
-              activeAccentText={activeAccentText}
-              onSelect={onSelectJob}
-              onToggleSave={onToggleSave}
-            />
-          ))
-        ) : (
-          <div className="py-12 text-center text-slate-400">
-            <Search className="h-10 w-10 text-slate-500 mx-auto mb-2 opacity-40" />
-            <p className="text-sm font-semibold">No results match filters</p>
-            <p className="text-xs text-slate-500 mt-1">Try resetting your keywords or categories.</p>
-            <button
-              onClick={onResetFilters}
-              className={`mt-3 text-xs font-semibold px-4 py-1.5 rounded-lg border ${darkMode ? "border-slate-800 text-slate-300" : "border-slate-200 text-slate-600"}`}
-            >
-              Reset Filters
-            </button>
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-1">
+          <div className="space-y-4 pb-2">
+            {filteredJobs.length > 0 ? (
+              exploreJobsPage.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  darkMode={darkMode}
+                  activeAccentText={activeAccentText}
+                  onSelect={onSelectJob}
+                  onToggleSave={onToggleSave}
+                />
+              ))
+            ) : (
+              <div className="py-12 text-center text-slate-400">
+                <Search className="h-10 w-10 text-slate-500 mx-auto mb-2 opacity-40" />
+                <p className="text-sm font-semibold">No results match filters</p>
+                <p className="text-xs text-slate-500 mt-1">Try resetting your keywords or categories.</p>
+                <button
+                  onClick={onResetFilters}
+                  className={`mt-3 text-xs font-semibold px-4 py-1.5 rounded-lg border ${darkMode ? "border-slate-800 text-slate-300" : "border-slate-200 text-slate-600"}`}
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {filteredJobs.length > 0 && (
-          <PaginationControls
-            darkMode={darkMode}
-            activeAccentPrimary={activeAccentPrimary}
-            currentPage={safeExplorePage}
-            totalPages={exploreTotalPages}
-            onPrevious={onPreviousPage}
-            onNext={onNextPage}
-            onPageSelect={onSelectPage}
-          />
+          <div className="pt-3 shrink-0">
+            <PaginationControls
+              darkMode={darkMode}
+              activeAccentPrimary={activeAccentPrimary}
+              currentPage={safeExplorePage}
+              totalPages={exploreTotalPages}
+              onPrevious={onPreviousPage}
+              onNext={onNextPage}
+              onPageSelect={onSelectPage}
+            />
+          </div>
         )}
       </div>
     </div>

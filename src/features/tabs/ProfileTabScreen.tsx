@@ -9,15 +9,12 @@ import {
   Clock,
   FileText,
   Globe,
-  Headphones,
   LifeBuoy,
   Link2,
   Lock,
   Mail,
   MapPin,
-  MessageCircle,
   Moon,
-  Phone,
   Search,
   Send,
   Settings as SettingsIcon,
@@ -820,10 +817,7 @@ export function ProfileTabScreen({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Talk to a human</p>
                 <div className="space-y-2">
                   {[
-                    { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Hello@sharpjob.co.za" },
-                    { icon: Headphones, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Live chat", meta: "Coming in future updates" },
-                    { icon: Phone, wrap: "bg-amber-50 text-amber-600 border-amber-100", title: "Call us", meta: "No phone number yet." },
-                    { icon: MessageCircle, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "Community forum", meta: "Coming in future updates." }
+                    { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Email us", meta: "Hello@sharpjob.co.za" }
                   ].map(c => {
                     const CIcon = c.icon;
                     const handleContactClick = () => {
@@ -865,9 +859,11 @@ export function ProfileTabScreen({
               </div>
 
               <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
-                {["Terms", "Privacy", "Cookies", "POPIA"].map(l => (
+                {["Terms", "Privacy", "POPIA"].map(l => (
                   <button key={l} onClick={() => {
-                    if (l === "Privacy") {
+                    if (l === "Terms") {
+                      window.open("https://sharp-job-cp7p.vercel.app/terms-of-service.html", "_blank");
+                    } else if (l === "Privacy") {
                       window.open("https://sharp-job-cp7p.vercel.app/privacy-policy.html", "_blank");
                     } else if (l === "POPIA") {
                       window.open("https://popia.co.za/", "_blank");
@@ -878,19 +874,17 @@ export function ProfileTabScreen({
                 ))}
               </div>
             </div>
-            {feedbackText.trim() && (
-              <div className={`p-3 border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
-                <button onClick={() => {
-                  const subject = encodeURIComponent("SharpJob App Feedback");
-                  const body = encodeURIComponent(feedbackText);
-                  window.open(`mailto:Hello@sharpjob.co.za?subject=${subject}&body=${body}`, "_blank");
-                  triggerNotification("Opening your email client...");
-                  setFeedbackText("");
-                }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
-                  <Send className="h-4 w-4" /> Send feedback
-                </button>
-              </div>
-            )}
+            <div className={`p-3 border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
+              <button onClick={() => {
+                const subject = encodeURIComponent("SharpJob App Feedback");
+                const body = encodeURIComponent(feedbackText.trim());
+                window.open(`mailto:Hello@sharpjob.co.za?subject=${subject}&body=${body}`, "_blank");
+                triggerNotification("Opening your email client...");
+                setFeedbackText("");
+              }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
+                <Send className="h-4 w-4" /> Send feedback
+              </button>
+            </div>
           </div>
         );
       })()}

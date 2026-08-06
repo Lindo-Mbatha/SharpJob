@@ -22,14 +22,21 @@ function extractSalaryPreview(salary: string): string {
   return result;
 }
 
-// Validate employment type, return "Unspecified" if not a standard value
+// Normalize noisy employment descriptions into a compact preview label.
 function validateEmploymentType(type: string): string {
-  const validTypes = ["Full-time", "Full Time", "Contract", "Part-time", "Part Time", "Hybrid", "Remote"];
   if (!type) return "Unspecified";
-  
-  // Check if it matches a valid type (case-insensitive)
-  const normalized = validTypes.find(t => t.toLowerCase() === type.toLowerCase());
-  return normalized || "Unspecified";
+
+  const normalized = type.toLowerCase().trim();
+  const contains = (keywords: string[]) => keywords.some(keyword => normalized.includes(keyword));
+
+  if (contains(["internship", "intern ", "intern-"])) return "Internship";
+  if (contains(["part-time", "part time"])) return "Part-time";
+  if (contains(["remote", "work from home", "wfh"])) return "Remote";
+  if (contains(["hybrid"])) return "Hybrid";
+  if (contains(["contract", "fixed-term", "fixed term", "temporary"])) return "Contract";
+  if (contains(["permanent", "full-time", "full time"])) return "Permanent";
+
+  return "Unspecified";
 }
 
 export function JobCard({

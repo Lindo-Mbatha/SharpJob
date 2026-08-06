@@ -44,6 +44,10 @@ const isGovListing = (job: Job): boolean => {
   }
 };
 
+function formatEmploymentType(type: Job["type"]): string {
+  return type === "Full-time" ? "Permanent" : type;
+}
+
 export function JobDetailsDrawer({
   darkMode,
   activeAccentText,
@@ -141,7 +145,7 @@ export function JobDetailsDrawer({
           </div>
           <div className={`p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
             <span className={`block text-[10px] uppercase font-bold tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Employment Type</span>
-            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{selectedJob.type}</span>
+            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{formatEmploymentType(selectedJob.type)}</span>
           </div>
           <div className={`p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-rose-50/60 border-rose-200"}`}>
             <span className="block text-[10px] uppercase font-bold tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1">
