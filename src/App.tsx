@@ -148,7 +148,11 @@ export default function App() {
     cacheMB,
     helpQuery,
     helpOpenFaq,
-    feedbackText
+    feedbackText,
+    accessibilityTalkBackHints,
+    accessibilityHighContrast,
+    accessibilityReduceMotion,
+    accessibilityTextSize
   } = profileState;
 
   const {
@@ -185,6 +189,10 @@ export default function App() {
     setHelpQuery,
     setHelpOpenFaq,
     setFeedbackText,
+    setAccessibilityTalkBackHints,
+    setAccessibilityHighContrast,
+    setAccessibilityReduceMotion,
+    setAccessibilityTextSize,
     saveProfileDetails
   } = profileActions;
 
@@ -403,6 +411,49 @@ export default function App() {
       company: selectedJob.company
     });
   }, [selectedJob]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const scaleByTextSize: Record<string, number> = {
+      "Small": 0.94,
+      "Default": 1,
+      "Large": 1.08,
+      "Extra large": 1.16
+    };
+
+    const root = document.documentElement;
+    const applyTextScale = () => {
+      if (accessibilityTextSize === "System") {
+        // Let OS/browser dynamic type manage sizing when available.
+        root.style.fontSize = "";
+        root.style.setProperty("-webkit-text-size-adjust", "auto");
+        root.style.setProperty("text-size-adjust", "auto");
+        return;
+      }
+
+      const scale = scaleByTextSize[accessibilityTextSize] ?? 1;
+      root.style.fontSize = `${(16 * scale).toFixed(2)}px`;
+      root.style.setProperty("-webkit-text-size-adjust", "100%");
+      root.style.setProperty("text-size-adjust", "100%");
+    };
+
+    applyTextScale();
+
+    if (accessibilityTextSize !== "System") return;
+
+    // Re-apply when app regains focus or viewport changes so System mode stays in sync.
+    const handleSystemResync = () => applyTextScale();
+    window.addEventListener("focus", handleSystemResync);
+    window.addEventListener("resize", handleSystemResync);
+    document.addEventListener("visibilitychange", handleSystemResync);
+
+    return () => {
+      window.removeEventListener("focus", handleSystemResync);
+      window.removeEventListener("resize", handleSystemResync);
+      document.removeEventListener("visibilitychange", handleSystemResync);
+    };
+  }, [accessibilityTextSize]);
 
   const onToggleSaveTracked = (jobId: string) => {
     const target = jobs.find(job => job.id === jobId);
@@ -667,6 +718,10 @@ export default function App() {
                   helpQuery={helpQuery}
                   helpOpenFaq={helpOpenFaq}
                   feedbackText={feedbackText}
+                  accessibilityTalkBackHints={accessibilityTalkBackHints}
+                  accessibilityHighContrast={accessibilityHighContrast}
+                  accessibilityReduceMotion={accessibilityReduceMotion}
+                  accessibilityTextSize={accessibilityTextSize}
                   setDarkMode={setDarkMode}
                   setAccentColor={setAccentColor}
                   setProfileSubScreen={setProfileSubScreen}
@@ -701,6 +756,10 @@ export default function App() {
                   setHelpQuery={setHelpQuery}
                   setHelpOpenFaq={setHelpOpenFaq}
                   setFeedbackText={setFeedbackText}
+                  setAccessibilityTalkBackHints={setAccessibilityTalkBackHints}
+                  setAccessibilityHighContrast={setAccessibilityHighContrast}
+                  setAccessibilityReduceMotion={setAccessibilityReduceMotion}
+                  setAccessibilityTextSize={setAccessibilityTextSize}
                   onGoToSaved={() => switchTab("saved")}
                   onMockUpload={handleMockUpload}
                   onProfileSaved={onProfileSavedTracked}

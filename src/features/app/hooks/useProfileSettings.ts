@@ -3,6 +3,9 @@ import { ProfileSubScreen } from "../../tabs/ProfileTabScreen";
 import { NotificationFrequency, NotificationSound } from "../types/domain";
 
 const PROFILE_DETAILS_KEY = "sharpjob.profile.details.v1";
+const ACCESSIBILITY_SETTINGS_KEY = "sharpjob.profile.accessibility.v1";
+
+export type AccessibilityTextSize = "System" | "Small" | "Default" | "Large" | "Extra large";
 
 type PersistedProfileDetails = {
   applicantName: string;
@@ -14,6 +17,13 @@ type PersistedProfileDetails = {
   applicantPortfolio: string;
   applicantLinkedIn: string;
   profileSkills: string[];
+};
+
+type PersistedAccessibilitySettings = {
+  accessibilityTalkBackHints: boolean;
+  accessibilityHighContrast: boolean;
+  accessibilityReduceMotion: boolean;
+  accessibilityTextSize: AccessibilityTextSize;
 };
 
 type PreferencesLike = {
@@ -65,6 +75,7 @@ async function writeStoredProfile(key: string, value: string): Promise<void> {
 
 export function useProfileSettings() {
   const hasHydratedRef = useRef(false);
+  const hasHydratedAccessibilityRef = useRef(false);
   const [accentColor, setAccentColor] = useState<string>("blue");
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
@@ -103,34 +114,61 @@ export function useProfileSettings() {
   const [helpQuery, setHelpQuery] = useState<string>("");
   const [helpOpenFaq, setHelpOpenFaq] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState<string>("");
+  const [accessibilityTalkBackHints, setAccessibilityTalkBackHints] = useState<boolean>(false);
+  const [accessibilityHighContrast, setAccessibilityHighContrast] = useState<boolean>(false);
+  const [accessibilityReduceMotion, setAccessibilityReduceMotion] = useState<boolean>(false);
+  const [accessibilityTextSize, setAccessibilityTextSize] = useState<AccessibilityTextSize>("System");
 
   useEffect(() => {
     let active = true;
 
     const hydrateProfileDetails = async () => {
       try {
-        const stored = await readStoredProfile(PROFILE_DETAILS_KEY);
-        if (!active || !stored) {
+        const [storedProfile, storedAccessibility] = await Promise.all([
+          readStoredProfile(PROFILE_DETAILS_KEY),
+          readStoredProfile(ACCESSIBILITY_SETTINGS_KEY)
+        ]);
+
+        if (!active) {
           hasHydratedRef.current = true;
+          hasHydratedAccessibilityRef.current = true;
           return;
         }
 
-        const parsed = JSON.parse(stored) as Partial<PersistedProfileDetails>;
+        if (storedProfile) {
+          const parsedProfile = JSON.parse(storedProfile) as Partial<PersistedProfileDetails>;
 
-        setApplicantName(typeof parsed.applicantName === "string" ? parsed.applicantName : "");
-        setApplicantEmail(typeof parsed.applicantEmail === "string" ? parsed.applicantEmail : "");
-        setApplicantPhone(typeof parsed.applicantPhone === "string" ? parsed.applicantPhone : "");
-        setApplicantHeadline(typeof parsed.applicantHeadline === "string" ? parsed.applicantHeadline : "");
-        setApplicantLocation(typeof parsed.applicantLocation === "string" ? parsed.applicantLocation : "");
-        setApplicantAbout(typeof parsed.applicantAbout === "string" ? parsed.applicantAbout : "");
-        setApplicantPortfolio(typeof parsed.applicantPortfolio === "string" ? parsed.applicantPortfolio : "");
-        setApplicantLinkedIn(typeof parsed.applicantLinkedIn === "string" ? parsed.applicantLinkedIn : "");
-        setProfileSkills(Array.isArray(parsed.profileSkills) ? parsed.profileSkills.filter((skill): skill is string => typeof skill === "string") : []);
+          setApplicantName(typeof parsedProfile.applicantName === "string" ? parsedProfile.applicantName : "");
+          setApplicantEmail(typeof parsedProfile.applicantEmail === "string" ? parsedProfile.applicantEmail : "");
+          setApplicantPhone(typeof parsedProfile.applicantPhone === "string" ? parsedProfile.applicantPhone : "");
+          setApplicantHeadline(typeof parsedProfile.applicantHeadline === "string" ? parsedProfile.applicantHeadline : "");
+          setApplicantLocation(typeof parsedProfile.applicantLocation === "string" ? parsedProfile.applicantLocation : "");
+          setApplicantAbout(typeof parsedProfile.applicantAbout === "string" ? parsedProfile.applicantAbout : "");
+          setApplicantPortfolio(typeof parsedProfile.applicantPortfolio === "string" ? parsedProfile.applicantPortfolio : "");
+          setApplicantLinkedIn(typeof parsedProfile.applicantLinkedIn === "string" ? parsedProfile.applicantLinkedIn : "");
+          setProfileSkills(Array.isArray(parsedProfile.profileSkills) ? parsedProfile.profileSkills.filter((skill): skill is string => typeof skill === "string") : []);
+        }
+
+        if (storedAccessibility) {
+          const parsedAccessibility = JSON.parse(storedAccessibility) as Partial<PersistedAccessibilitySettings>;
+          const validTextSizes: AccessibilityTextSize[] = ["System", "Small", "Default", "Large", "Extra large"];
+
+          setAccessibilityTalkBackHints(Boolean(parsedAccessibility.accessibilityTalkBackHints));
+          setAccessibilityHighContrast(Boolean(parsedAccessibility.accessibilityHighContrast));
+          setAccessibilityReduceMotion(Boolean(parsedAccessibility.accessibilityReduceMotion));
+          setAccessibilityTextSize(
+            typeof parsedAccessibility.accessibilityTextSize === "string" &&
+              validTextSizes.includes(parsedAccessibility.accessibilityTextSize as AccessibilityTextSize)
+              ? (parsedAccessibility.accessibilityTextSize as AccessibilityTextSize)
+              : "System"
+          );
+        }
       } catch (_error) {
         // Ignore corrupt/missing payloads and keep first-time empty defaults.
       } finally {
         if (active) {
           hasHydratedRef.current = true;
+          hasHydratedAccessibilityRef.current = true;
         }
       }
     };
@@ -159,6 +197,24 @@ export function useProfileSettings() {
 
     await writeStoredProfile(PROFILE_DETAILS_KEY, JSON.stringify(payload));
   };
+
+  useEffect(() => {
+    if (!hasHydratedAccessibilityRef.current) return;
+
+    const payload: PersistedAccessibilitySettings = {
+      accessibilityTalkBackHints,
+      accessibilityHighContrast,
+      accessibilityReduceMotion,
+      accessibilityTextSize
+    };
+
+    void writeStoredProfile(ACCESSIBILITY_SETTINGS_KEY, JSON.stringify(payload));
+  }, [
+    accessibilityTalkBackHints,
+    accessibilityHighContrast,
+    accessibilityReduceMotion,
+    accessibilityTextSize
+  ]);
 
   return {
     state: {
@@ -194,7 +250,11 @@ export function useProfileSettings() {
       cacheMB,
       helpQuery,
       helpOpenFaq,
-      feedbackText
+      feedbackText,
+      accessibilityTalkBackHints,
+      accessibilityHighContrast,
+      accessibilityReduceMotion,
+      accessibilityTextSize
     },
     actions: {
       setAccentColor,
@@ -230,6 +290,10 @@ export function useProfileSettings() {
       setHelpQuery,
       setHelpOpenFaq,
       setFeedbackText,
+      setAccessibilityTalkBackHints,
+      setAccessibilityHighContrast,
+      setAccessibilityReduceMotion,
+      setAccessibilityTextSize,
       saveProfileDetails
     }
   };

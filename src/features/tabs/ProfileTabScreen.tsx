@@ -15,6 +15,7 @@ import {
   Mail,
   MapPin,
   Moon,
+  Phone,
   Search,
   Send,
   Settings as SettingsIcon,
@@ -33,8 +34,9 @@ import {
 import { NotificationFrequency, NotificationSound } from "../app/types/domain";
 
 type IconCmp = React.ComponentType<{ className?: string }>;
+type AccessibilityTextSize = "System" | "Small" | "Default" | "Large" | "Extra large";
 
-export type ProfileSubScreen = null | "edit" | "resume" | "alertprefs" | "settings" | "help";
+export type ProfileSubScreen = null | "edit" | "resume" | "alertprefs" | "settings" | "accessibility" | "help";
 
 export interface AccentStyle {
   primary: string;
@@ -76,7 +78,8 @@ function SettingsRow({
   trailing,
   onClick,
   dark,
-  accentText
+  accentText,
+  talkBackHintsEnabled = false
 }: {
   icon: IconCmp;
   iconWrap: string;
@@ -86,11 +89,15 @@ function SettingsRow({
   onClick: () => void;
   dark: boolean;
   accentText: string;
+  talkBackHintsEnabled?: boolean;
 }) {
+  const talkBackLabel = subtitle ? `${title}. ${subtitle}` : title;
+
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={talkBackHintsEnabled ? talkBackLabel : undefined}
       className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all group active:scale-[0.99] ${
         dark
           ? "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
@@ -169,6 +176,10 @@ export function ProfileTabScreen({
   helpQuery,
   helpOpenFaq,
   feedbackText,
+  accessibilityTalkBackHints,
+  accessibilityHighContrast,
+  accessibilityReduceMotion,
+  accessibilityTextSize,
   setDarkMode,
   setAccentColor,
   setProfileSubScreen,
@@ -203,6 +214,10 @@ export function ProfileTabScreen({
   setHelpQuery,
   setHelpOpenFaq,
   setFeedbackText,
+  setAccessibilityTalkBackHints,
+  setAccessibilityHighContrast,
+  setAccessibilityReduceMotion,
+  setAccessibilityTextSize,
   onGoToSaved,
   onMockUpload,
   onProfileSaved,
@@ -254,6 +269,10 @@ export function ProfileTabScreen({
   helpQuery: string;
   helpOpenFaq: string | null;
   feedbackText: string;
+  accessibilityTalkBackHints: boolean;
+  accessibilityHighContrast: boolean;
+  accessibilityReduceMotion: boolean;
+  accessibilityTextSize: AccessibilityTextSize;
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
   setAccentColor: React.Dispatch<React.SetStateAction<string>>;
   setProfileSubScreen: React.Dispatch<React.SetStateAction<ProfileSubScreen>>;
@@ -288,14 +307,34 @@ export function ProfileTabScreen({
   setHelpQuery: React.Dispatch<React.SetStateAction<string>>;
   setHelpOpenFaq: React.Dispatch<React.SetStateAction<string | null>>;
   setFeedbackText: React.Dispatch<React.SetStateAction<string>>;
+  setAccessibilityTalkBackHints: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityHighContrast: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityReduceMotion: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityTextSize: React.Dispatch<React.SetStateAction<AccessibilityTextSize>>;
   onGoToSaved: () => void;
   onMockUpload: () => void;
   onProfileSaved: () => void;
   onRateApp: () => void | Promise<void>;
   triggerNotification: (message: string) => void;
 }) {
+  const toggleTalkBackHints = () => {
+    const next = !accessibilityTalkBackHints;
+    setAccessibilityTalkBackHints(next);
+    triggerNotification(next ? "TalkBack support hints enabled." : "TalkBack support hints disabled.");
+  };
+
+  const previewSizeClass =
+    accessibilityTextSize === "Small"
+      ? "text-xs"
+      : accessibilityTextSize === "Large"
+        ? "text-base"
+        : accessibilityTextSize === "Extra large"
+          ? "text-lg"
+          : "text-sm";
+
   return (
     <div className="relative flex-1 flex flex-col">
+      <p className="sr-only" aria-live="polite">{accessibilityTalkBackHints ? "TalkBack support hints enabled." : "TalkBack support hints disabled."}</p>
       <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-4">
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -367,6 +406,7 @@ export function ProfileTabScreen({
             subtitle="Name, headline, about, skills, links"
             dark={darkMode}
             accentText={activeAccentText}
+            talkBackHintsEnabled={accessibilityTalkBackHints}
             trailing={<span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{profileStrengthLabel}</span>}
             onClick={() => setProfileSubScreen("edit")}
           />
@@ -377,6 +417,7 @@ export function ProfileTabScreen({
             subtitle={uploadedResume || "No resume on file"}
             dark={darkMode}
             accentText={activeAccentText}
+            talkBackHintsEnabled={accessibilityTalkBackHints}
             trailing={<span className="text-[10px] text-slate-400 font-semibold">{resumeVersions.length} saved</span>}
             onClick={() => setProfileSubScreen("resume")}
           />
@@ -387,6 +428,7 @@ export function ProfileTabScreen({
             subtitle="Matches, interviews, digests, quiet hours"
             dark={darkMode}
             accentText={activeAccentText}
+            talkBackHintsEnabled={accessibilityTalkBackHints}
             trailing={<span className="text-[10px] text-slate-400 font-semibold capitalize">{prefFrequency}</span>}
             onClick={() => setProfileSubScreen("alertprefs")}
           />
@@ -397,8 +439,20 @@ export function ProfileTabScreen({
             subtitle="Appearance, language, data, sound"
             dark={darkMode}
             accentText={activeAccentText}
+            talkBackHintsEnabled={accessibilityTalkBackHints}
             trailing={<span className="text-[10px] text-slate-400 font-semibold">{darkMode ? "Dark" : "Light"}</span>}
             onClick={() => setProfileSubScreen("settings")}
+          />
+          <SettingsRow
+            icon={SettingsIcon}
+            iconWrap="bg-violet-50 text-violet-600 border-violet-100"
+            title="Accessibility"
+            subtitle="Text size, contrast, motion"
+            dark={darkMode}
+            accentText={activeAccentText}
+            talkBackHintsEnabled={accessibilityTalkBackHints}
+            trailing={<span className="text-[10px] text-slate-400 font-semibold">Open</span>}
+            onClick={() => setProfileSubScreen("accessibility")}
           />
           <SettingsRow
             icon={LifeBuoy}
@@ -407,6 +461,7 @@ export function ProfileTabScreen({
             subtitle="FAQs, contact us, send feedback"
             dark={darkMode}
             accentText={activeAccentText}
+            talkBackHintsEnabled={accessibilityTalkBackHints}
             trailing={<span className="text-[10px] text-slate-400 font-semibold">24/7</span>}
             onClick={() => setProfileSubScreen("help")}
           />
@@ -764,6 +819,87 @@ export function ProfileTabScreen({
 
             <button onClick={() => { if (confirm("Sign out of SharpJob on this device?")) { triggerNotification("Signed out. (Demo only - session restored on reload.)"); setProfileSubScreen(null); } }} className="w-full flex items-center justify-center gap-1.5 p-3 rounded-xl border border-red-200 bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors">
               <Lock className="h-3.5 w-3.5" /> Sign out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {profileSubScreen === "accessibility" && (
+        <div className={`absolute inset-0 z-40 flex flex-col animate-slide-up ${darkMode ? "bg-slate-950" : "bg-white"}`}>
+          <ReaderTopBar title="Accessibility" onBackLabel="Profile" onBack={() => setProfileSubScreen(null)} dark={darkMode} accentText={activeAccentText} />
+          <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-4">
+            <p className="text-[11px] text-slate-500 leading-relaxed -mt-1">Adjust readability and navigation comfort. You can add more options here over time.</p>
+
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Volume2 className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>TalkBack support hints</p>
+                <p className="text-[11px] text-slate-500">Adds extra guidance labels and clearer tap targets.</p>
+              </div>
+              <Toggle on={accessibilityTalkBackHints} onChange={toggleTalkBackHints} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
+
+            <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><FileText className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Text size</p>
+                <p className="text-[11px] text-slate-500">System follows your device text settings. Custom sizes stay app-specific.</p>
+              </div>
+              <select
+                value={accessibilityTextSize}
+                onChange={e => {
+                  const next = e.target.value as AccessibilityTextSize;
+                  setAccessibilityTextSize(next);
+                  triggerNotification(`Text size set to ${next}.`);
+                }}
+                className={`text-[11px] font-bold px-2 py-1 rounded-lg border focus:outline-none ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}
+              >
+                <option>System</option>
+                <option>Small</option>
+                <option>Default</option>
+                <option>Large</option>
+                <option>Extra large</option>
+              </select>
+            </div>
+
+            <div className={`rounded-xl border p-3 space-y-1.5 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Preview</p>
+              <p className={`${previewSizeClass} font-semibold leading-snug ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
+                Accessibility preview text in {accessibilityTextSize} mode.
+              </p>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Choose System to follow your phone setting, or pick a custom size for this app.
+              </p>
+            </div>
+
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-amber-50 text-amber-600 border-amber-100 flex items-center justify-center shrink-0"><Sun className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>High contrast mode</p>
+                <p className="text-[11px] text-slate-500">Boost distinction between text, controls, and backgrounds.</p>
+              </div>
+              <Toggle on={accessibilityHighContrast} onChange={() => setAccessibilityHighContrast(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
+
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-rose-50 text-rose-600 border-rose-100 flex items-center justify-center shrink-0"><Zap className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Reduce motion</p>
+                <p className="text-[11px] text-slate-500">Minimize transitions and animation intensity.</p>
+              </div>
+              <Toggle on={accessibilityReduceMotion} onChange={() => setAccessibilityReduceMotion(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
+
+            <button
+              onClick={() => triggerNotification("More accessibility options can be added here anytime.")}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${darkMode ? "bg-slate-900/40 border-slate-800 hover:bg-slate-900" : "bg-slate-50 border-slate-200 hover:bg-white"}`}
+            >
+              <div className="w-9 h-9 rounded-lg border bg-violet-50 text-violet-600 border-violet-100 flex items-center justify-center shrink-0"><SettingsIcon className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>More accessibility options</p>
+                <p className="text-[11px] text-slate-500">Placeholder for future additions like dyslexia font, captions, or color filters.</p>
+              </div>
+              <ChevronRight className={`h-4 w-4 shrink-0 ${activeAccentText}`} />
             </button>
           </div>
         </div>
