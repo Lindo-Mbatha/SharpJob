@@ -117,7 +117,7 @@ export function useProfileSettings() {
   const [accessibilityTalkBackHints, setAccessibilityTalkBackHints] = useState<boolean>(false);
   const [accessibilityHighContrast, setAccessibilityHighContrast] = useState<boolean>(false);
   const [accessibilityReduceMotion, setAccessibilityReduceMotion] = useState<boolean>(false);
-  const [accessibilityTextSize, setAccessibilityTextSize] = useState<AccessibilityTextSize>("System");
+  const [accessibilityTextSize, setAccessibilityTextSize] = useState<AccessibilityTextSize>("Default");
 
   useEffect(() => {
     let active = true;
@@ -160,7 +160,7 @@ export function useProfileSettings() {
             typeof parsedAccessibility.accessibilityTextSize === "string" &&
               validTextSizes.includes(parsedAccessibility.accessibilityTextSize as AccessibilityTextSize)
               ? (parsedAccessibility.accessibilityTextSize as AccessibilityTextSize)
-              : "System"
+              : "Default"
           );
         }
       } catch (_error) {

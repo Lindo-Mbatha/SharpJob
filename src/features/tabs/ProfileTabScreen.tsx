@@ -839,6 +839,13 @@ export function ProfileTabScreen({
               <Toggle on={accessibilityTalkBackHints} onChange={toggleTalkBackHints} accentBg={activeAccentPrimary} dark={darkMode} />
             </div>
 
+            <div className={`rounded-xl border p-3 text-[11px] leading-relaxed ${darkMode ? "bg-amber-950/30 border-amber-900/60 text-amber-200" : "bg-amber-50 border-amber-200 text-amber-900"}`}>
+              <p>
+                TalkBack support is still in testing and may not work as intended on all devices. Before using this option,
+                first enable TalkBack in your phone accessibility settings.
+              </p>
+            </div>
+
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><FileText className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0">
