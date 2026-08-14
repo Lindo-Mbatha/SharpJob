@@ -78,6 +78,7 @@ export function ApplyWizardSheet({
               setApplyStep(1);
             }
           }}
+          aria-label="Close application wizard"
           className="p-1 text-slate-400 hover:text-slate-600"
         >
           <X className="h-4.5 w-4.5" />
@@ -149,6 +150,7 @@ export function ApplyWizardSheet({
                       setUploadedResume(null);
                       onResumeRemoved();
                     }}
+                    aria-label="Remove uploaded resume"
                     className="text-red-500 hover:text-red-600 p-1"
                   >
                     <Trash2 className="h-4 w-4" />

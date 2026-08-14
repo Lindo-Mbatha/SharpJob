@@ -24,7 +24,7 @@ export function PaginationControls({
       <button
         onClick={onPrevious}
         disabled={currentPage === 1}
-        className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
+        className={`touch-target px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
           currentPage === 1
             ? (darkMode ? "border-slate-800 text-slate-600" : "border-slate-200 text-slate-300")
             : (darkMode ? "border-slate-700 hover:bg-slate-900" : "border-slate-300 hover:bg-slate-50")
@@ -40,7 +40,7 @@ export function PaginationControls({
             <button
               key={`page-${chip}`}
               onClick={() => onPageSelect(chip)}
-              className={`min-w-7 h-7 px-2 rounded-md text-[11px] font-semibold border transition-colors ${
+              className={`touch-target min-w-7 h-7 px-2 rounded-md text-[11px] font-semibold border transition-colors ${
                 chip === currentPage
                   ? `${activeAccentPrimary} text-white border-transparent`
                   : (darkMode ? "border-slate-700 text-slate-300 hover:bg-slate-900" : "border-slate-300 text-slate-600 hover:bg-slate-50")
@@ -54,7 +54,7 @@ export function PaginationControls({
       <button
         onClick={onNext}
         disabled={currentPage === totalPages}
-        className={`px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
+        className={`touch-target px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors ${
           currentPage === totalPages
             ? (darkMode ? "border-slate-800 text-slate-600" : "border-slate-200 text-slate-300")
             : (darkMode ? "border-slate-700 hover:bg-slate-900" : "border-slate-300 hover:bg-slate-50")

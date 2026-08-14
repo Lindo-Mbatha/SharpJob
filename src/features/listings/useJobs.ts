@@ -40,6 +40,29 @@ function mapRow(row: Record<string, unknown>): Job {
 
 export type JobsLoadState = "idle" | "loading" | "success" | "error";
 
+const SUPABASE_BATCH_SIZE = 1000;
+
+async function fetchAllJobs() {
+  const rows: Record<string, unknown>[] = [];
+
+  for (let start = 0; ; start += SUPABASE_BATCH_SIZE) {
+    const { data, error } = await supabase
+      .from("Jobs")
+      .select("*")
+      .order("id", { ascending: true })
+      .range(start, start + SUPABASE_BATCH_SIZE - 1);
+
+    if (error) return { rows: null, error };
+
+    const batch = (data ?? []) as Record<string, unknown>[];
+    rows.push(...batch);
+
+    if (batch.length < SUPABASE_BATCH_SIZE) {
+      return { rows, error: null };
+    }
+  }
+}
+
 export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loadState, setLoadState] = useState<JobsLoadState>("idle");
@@ -52,10 +75,7 @@ export function useJobs() {
       setLoadState("loading");
       setError(null);
 
-      const { data, error: sbError } = await supabase
-        .from("Jobs")
-        .select("*")
-        .order("id", { ascending: true });
+      const { rows, error: sbError } = await fetchAllJobs();
 
       if (cancelled) return;
 
@@ -66,15 +86,19 @@ export function useJobs() {
         return;
       }
 
-      const mapped = (data ?? []).map(row => mapRow(row as Record<string, unknown>));
+      const mapped = (rows ?? []).map(row => mapRow(row));
       setJobs(mapped);
       setLoadState("success");
     };
 
     void fetchJobs();
+    const refreshTimer = window.setInterval(() => {
+      void fetchJobs();
+    }, 5 * 60 * 1000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(refreshTimer);
     };
   }, []);
 

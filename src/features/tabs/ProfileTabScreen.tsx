@@ -51,19 +51,20 @@ export interface ResumeVersion {
   active: boolean;
 }
 
-function Toggle({ on, onChange, accentBg, dark }: { on: boolean; onChange: () => void; accentBg: string; dark: boolean }) {
+function Toggle({ on, onChange, accentBg, dark, label }: { on: boolean; onChange: () => void; accentBg: string; dark: boolean; label: string }) {
   return (
     <button
       type="button"
       onClick={onChange}
       aria-pressed={on}
-      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
+      aria-label={`${label}: ${on ? "on" : "off"}`}
+      className={`touch-target relative inline-flex h-5 w-9 shrink-0 items-center justify-start rounded-full transition-colors duration-200 ${
         on ? accentBg : (dark ? "bg-slate-700" : "bg-slate-300")
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          on ? "translate-x-[18px]" : "translate-x-0.5"
+        className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-[left,right] duration-200 ${
+          on ? "right-0.5" : "left-0.5"
         }`}
       />
     </button>
@@ -142,7 +143,6 @@ export function ProfileTabScreen({
   savedVisibleCount,
   profileStrengthLabel,
   profileSubScreen,
-  jobs,
   applicantName,
   applicantEmail,
   applicantPhone,
@@ -179,6 +179,10 @@ export function ProfileTabScreen({
   accessibilityTalkBackHints,
   accessibilityHighContrast,
   accessibilityReduceMotion,
+  accessibilityDyslexiaFont,
+  accessibilityReadableSpacing,
+  accessibilityReduceTransparency,
+  accessibilityFocusIndicators,
   accessibilityTextSize,
   setDarkMode,
   setAccentColor,
@@ -217,10 +221,15 @@ export function ProfileTabScreen({
   setAccessibilityTalkBackHints,
   setAccessibilityHighContrast,
   setAccessibilityReduceMotion,
+  setAccessibilityDyslexiaFont,
+  setAccessibilityReadableSpacing,
+  setAccessibilityReduceTransparency,
+  setAccessibilityFocusIndicators,
   setAccessibilityTextSize,
   onGoToSaved,
   onMockUpload,
   onProfileSaved,
+  onHeadlineSaved,
   onRateApp,
   triggerNotification
 }: {
@@ -235,7 +244,6 @@ export function ProfileTabScreen({
   savedVisibleCount: number;
   profileStrengthLabel: string;
   profileSubScreen: ProfileSubScreen;
-  jobs: Job[];
   applicantName: string;
   applicantEmail: string;
   applicantPhone: string;
@@ -272,6 +280,10 @@ export function ProfileTabScreen({
   accessibilityTalkBackHints: boolean;
   accessibilityHighContrast: boolean;
   accessibilityReduceMotion: boolean;
+  accessibilityDyslexiaFont: boolean;
+  accessibilityReadableSpacing: boolean;
+  accessibilityReduceTransparency: boolean;
+  accessibilityFocusIndicators: boolean;
   accessibilityTextSize: AccessibilityTextSize;
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
   setAccentColor: React.Dispatch<React.SetStateAction<string>>;
@@ -310,10 +322,15 @@ export function ProfileTabScreen({
   setAccessibilityTalkBackHints: React.Dispatch<React.SetStateAction<boolean>>;
   setAccessibilityHighContrast: React.Dispatch<React.SetStateAction<boolean>>;
   setAccessibilityReduceMotion: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityDyslexiaFont: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityReadableSpacing: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityReduceTransparency: React.Dispatch<React.SetStateAction<boolean>>;
+  setAccessibilityFocusIndicators: React.Dispatch<React.SetStateAction<boolean>>;
   setAccessibilityTextSize: React.Dispatch<React.SetStateAction<AccessibilityTextSize>>;
   onGoToSaved: () => void;
   onMockUpload: () => void;
   onProfileSaved: () => void;
+  onHeadlineSaved: (headline: string) => void;
   onRateApp: () => void | Promise<void>;
   triggerNotification: (message: string) => void;
 }) {
@@ -489,17 +506,8 @@ export function ProfileTabScreen({
             title="Edit Profile"
             onBackLabel="Profile"
             onBack={() => {
-              // Check if headline was updated and trigger job match notification
-              if (applicantHeadline.trim()) {
-                const matchingJobs = jobs.filter(job => 
-                  applicantHeadline.toLowerCase().includes(job.title.toLowerCase()) ||
-                  job.title.toLowerCase().includes(applicantHeadline.toLowerCase())
-                );
-                if (matchingJobs.length > 0) {
-                  triggerNotification(`Found ${matchingJobs.length} role${matchingJobs.length !== 1 ? 's' : ''} matching your position "${applicantHeadline}"!`);
-                }
-              }
               onProfileSaved();
+              onHeadlineSaved(applicantHeadline);
               triggerNotification("Your profile details were saved.");
               setProfileSubScreen(null);
             }}
@@ -574,7 +582,7 @@ export function ProfileTabScreen({
                 {profileSkills.map(s => (
                   <span key={s} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${darkMode ? "bg-slate-900 border-slate-800 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"}`}>
                     {s}
-                    <button onClick={() => setProfileSkills(prev => prev.filter(x => x !== s))} className="opacity-50 hover:opacity-100 hover:text-red-500"><X className="h-3 w-3" /></button>
+                    <button onClick={() => setProfileSkills(prev => prev.filter(x => x !== s))} aria-label={`Remove skill ${s}`} className="touch-target opacity-50 hover:opacity-100 hover:text-red-500"><X className="h-3 w-3" /></button>
                   </span>
                 ))}
               </div>
@@ -617,7 +625,7 @@ export function ProfileTabScreen({
                       <p className="text-[10px] text-slate-400">PDF - attached to new applications</p>
                     </div>
                   </div>
-                  <button onClick={() => { setUploadedResume(null); setResumeVersions(prev => prev.map(v => ({ ...v, active: false }))); triggerNotification("Active resume removed."); }} className="text-slate-400 hover:text-red-500 p-1"><Trash2 className="h-4 w-4" /></button>
+                  <button onClick={() => { setUploadedResume(null); setResumeVersions(prev => prev.map(v => ({ ...v, active: false }))); triggerNotification("Active resume removed."); }} aria-label="Remove active resume" className="touch-target text-slate-400 hover:text-red-500 p-1"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ) : (
                 <button onClick={onMockUpload} className={`w-full h-28 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 text-xs font-semibold transition-colors ${isUploading ? "border-slate-300 text-slate-400" : (darkMode ? "border-slate-700 text-slate-300 hover:border-slate-600" : "border-slate-300 text-slate-500 hover:border-slate-400")}`}>
@@ -637,7 +645,7 @@ export function ProfileTabScreen({
                 <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Auto-attach to applications</p>
                 <p className="text-[11px] text-slate-500">Skip the upload step on every Apply flow.</p>
               </div>
-              <Toggle on={autoAttachResume} onChange={() => setAutoAttachResume(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+              <Toggle label="Auto-attach resume" on={autoAttachResume} onChange={() => setAutoAttachResume(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
             </button>
 
             <div>
@@ -689,7 +697,7 @@ export function ProfileTabScreen({
                     <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>{row.title}</p>
                     <p className="text-[11px] text-slate-500">{row.desc}</p>
                   </div>
-                  <Toggle on={row.on} onChange={() => row.set(!row.on)} accentBg={activeAccentPrimary} dark={darkMode} />
+                  <Toggle label={row.title} on={row.on} onChange={() => row.set(!row.on)} accentBg={activeAccentPrimary} dark={darkMode} />
                 </button>
               );
             })}
@@ -732,12 +740,12 @@ export function ProfileTabScreen({
                 <button onClick={() => setPrefPush(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
                   <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><Bell className="h-4 w-4" /></div>
                   <div className="flex-1"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Push notifications</p><p className="text-[11px] text-slate-500">On this device.</p></div>
-                  <Toggle on={prefPush} onChange={() => setPrefPush(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+                  <Toggle label="Push notifications" on={prefPush} onChange={() => setPrefPush(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
                 </button>
                 <button onClick={() => setPrefEmail(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
                   <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Mail className="h-4 w-4" /></div>
                   <div className="flex-1"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Email</p><p className="text-[11px] text-slate-500 truncate">{applicantEmail}</p></div>
-                  <Toggle on={prefEmail} onChange={() => setPrefEmail(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+                  <Toggle label="Email notifications" on={prefEmail} onChange={() => setPrefEmail(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
                 </button>
               </div>
             </div>
@@ -761,7 +769,7 @@ export function ProfileTabScreen({
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Accent colour</label>
               <div className="flex items-center gap-2">
                 {Object.entries(accents).map(([k, v]) => (
-                  <button key={k} onClick={() => setAccentColor(k)} className={`w-8 h-8 rounded-full ${v.primary} flex items-center justify-center transition-transform ${accentColor === k ? "scale-110 ring-2 ring-offset-2 " + (darkMode ? "ring-offset-slate-950" : "ring-offset-white") + " ring-current " + v.text : "opacity-60"}`} aria-label={v.name}>
+                  <button key={k} onClick={() => setAccentColor(k)} className={`touch-target w-8 h-8 rounded-full ${v.primary} flex items-center justify-center transition-transform ${accentColor === k ? "scale-110 ring-2 ring-offset-2 " + (darkMode ? "ring-offset-slate-950" : "ring-offset-white") + " ring-current " + v.text : "opacity-60"}`} aria-label={v.name}>
                     {accentColor === k && <Check className="h-3.5 w-3.5 text-white" />}
                   </button>
                 ))}
@@ -785,15 +793,15 @@ export function ProfileTabScreen({
 
             <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
-            <button onClick={() => setSettingWifiOnly(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <button onClick={() => setSettingWifiOnly(v => !v)} aria-label="Toggle Wi-Fi only" className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Wifi className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Wi-Fi only</p><p className="text-[11px] text-slate-500">Pause media & large syncs on mobile data.</p></div>
-              <Toggle on={settingWifiOnly} onChange={() => setSettingWifiOnly(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+              <Toggle label="Wi-Fi only" on={settingWifiOnly} onChange={() => setSettingWifiOnly(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
             </button>
-            <button onClick={() => setSettingHaptics(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <button onClick={() => setSettingHaptics(v => !v)} aria-label="Toggle haptic feedback" className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><Zap className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Haptic feedback</p><p className="text-[11px] text-slate-500">Subtle taps on toggles & confirms.</p></div>
-              <Toggle on={settingHaptics} onChange={() => setSettingHaptics(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+              <Toggle label="Haptic feedback" on={settingHaptics} onChange={() => setSettingHaptics(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
             </button>
 
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
@@ -809,7 +817,7 @@ export function ProfileTabScreen({
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-slate-100 text-slate-600 border-slate-200 flex items-center justify-center shrink-0"><FileText className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Cached data</p><p className="text-[11px] text-slate-500">{cacheMB} MB - listings, avatars, icons.</p></div>
-              <button onClick={() => { setCacheMB(0); triggerNotification("Cache cleared. Listings will refresh on next open."); }} className="text-[10px] font-bold text-red-500 px-2 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100">Clear</button>
+              <button onClick={() => { setCacheMB(0); triggerNotification("Cache cleared. Listings will refresh on next open."); }} aria-label="Clear cached data" className="text-[10px] font-bold text-red-500 px-2 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100">Clear</button>
             </div>
 
             <div className={`p-3 rounded-xl border flex items-center justify-between ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
@@ -817,7 +825,7 @@ export function ProfileTabScreen({
               <span className="text-[11px] text-slate-400 font-bold">1.2.0 (build 248)</span>
             </div>
 
-            <button onClick={() => { if (confirm("Sign out of SharpJob on this device?")) { triggerNotification("Signed out. (Demo only - session restored on reload.)"); setProfileSubScreen(null); } }} className="w-full flex items-center justify-center gap-1.5 p-3 rounded-xl border border-red-200 bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors">
+            <button onClick={() => { if (confirm("Sign out of SharpJob on this device?")) { triggerNotification("Signed out. (Demo only - session restored on reload.)"); setProfileSubScreen(null); } }} aria-label="Sign out of SharpJob" className="w-full flex items-center justify-center gap-1.5 p-3 rounded-xl border border-red-200 bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors">
               <Lock className="h-3.5 w-3.5" /> Sign out
             </button>
           </div>
@@ -836,7 +844,7 @@ export function ProfileTabScreen({
                 <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>TalkBack support hints</p>
                 <p className="text-[11px] text-slate-500">Adds extra guidance labels and clearer tap targets.</p>
               </div>
-              <Toggle on={accessibilityTalkBackHints} onChange={toggleTalkBackHints} accentBg={activeAccentPrimary} dark={darkMode} />
+              <Toggle label="TalkBack support hints" on={accessibilityTalkBackHints} onChange={toggleTalkBackHints} accentBg={activeAccentPrimary} dark={darkMode} />
             </div>
 
             <div className={`rounded-xl border p-3 text-[11px] leading-relaxed ${darkMode ? "bg-amber-950/30 border-amber-900/60 text-amber-200" : "bg-amber-50 border-amber-200 text-amber-900"}`}>
@@ -885,7 +893,7 @@ export function ProfileTabScreen({
                 <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>High contrast mode</p>
                 <p className="text-[11px] text-slate-500">Boost distinction between text, controls, and backgrounds.</p>
               </div>
-              <Toggle on={accessibilityHighContrast} onChange={() => setAccessibilityHighContrast(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+              <Toggle label="High contrast mode" on={accessibilityHighContrast} onChange={() => setAccessibilityHighContrast(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
             </div>
 
             <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
@@ -894,20 +902,44 @@ export function ProfileTabScreen({
                 <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Reduce motion</p>
                 <p className="text-[11px] text-slate-500">Minimize transitions and animation intensity.</p>
               </div>
-              <Toggle on={accessibilityReduceMotion} onChange={() => setAccessibilityReduceMotion(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+              <Toggle label="Reduce motion" on={accessibilityReduceMotion} onChange={() => setAccessibilityReduceMotion(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
             </div>
 
-            <button
-              onClick={() => triggerNotification("More accessibility options can be added here anytime.")}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${darkMode ? "bg-slate-900/40 border-slate-800 hover:bg-slate-900" : "bg-slate-50 border-slate-200 hover:bg-white"}`}
-            >
-              <div className="w-9 h-9 rounded-lg border bg-violet-50 text-violet-600 border-violet-100 flex items-center justify-center shrink-0"><SettingsIcon className="h-4 w-4" /></div>
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><FileText className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0">
-                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>More accessibility options</p>
-                <p className="text-[11px] text-slate-500">Placeholder for future additions like dyslexia font, captions, or color filters.</p>
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Dyslexia-friendly font</p>
+                <p className="text-[11px] text-slate-500">Use clearer letter shapes and spacing for easier reading.</p>
               </div>
-              <ChevronRight className={`h-4 w-4 shrink-0 ${activeAccentText}`} />
-            </button>
+              <Toggle label="Dyslexia-friendly font" on={accessibilityDyslexiaFont} onChange={() => setAccessibilityDyslexiaFont(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
+
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><FileText className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Readable spacing</p>
+                <p className="text-[11px] text-slate-500">Increase line and letter spacing for easier reading.</p>
+              </div>
+              <Toggle label="Readable spacing" on={accessibilityReadableSpacing} onChange={() => setAccessibilityReadableSpacing(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
+
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-slate-100 text-slate-600 border-slate-200 flex items-center justify-center shrink-0"><SettingsIcon className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Reduce transparency</p>
+                <p className="text-[11px] text-slate-500">Replace translucent and blurred surfaces with solid backgrounds.</p>
+              </div>
+              <Toggle label="Reduce transparency" on={accessibilityReduceTransparency} onChange={() => setAccessibilityReduceTransparency(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
+
+            <div className={`w-full flex items-center gap-3 p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="w-9 h-9 rounded-lg border bg-emerald-50 text-emerald-600 border-emerald-100 flex items-center justify-center shrink-0"><Check className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Focus indicators</p>
+                <p className="text-[11px] text-slate-500">Show a clear outline around the active control for keyboard, switch, and voice navigation.</p>
+              </div>
+              <Toggle label="Focus indicators" on={accessibilityFocusIndicators} onChange={() => setAccessibilityFocusIndicators(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+            </div>
           </div>
         </div>
       )}

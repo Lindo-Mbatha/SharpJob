@@ -68,7 +68,7 @@ export function AdvancedSearchSheet({
           </div>
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-full transition-colors ${darkMode ? "bg-slate-900 text-slate-400 hover:text-slate-200" : "bg-slate-100 text-slate-500 hover:text-slate-700"}`}
+            className={`touch-target p-1.5 rounded-full transition-colors ${darkMode ? "bg-slate-900 text-slate-400 hover:text-slate-200" : "bg-slate-100 text-slate-500 hover:text-slate-700"}`}
           >
             <X className="h-4 w-4" />
           </button>
@@ -123,7 +123,7 @@ export function AdvancedSearchSheet({
                   <button
                     key={value}
                     onClick={() => setAdvTypes(prev => isActive ? prev.filter(t => t !== value) : [...prev, value])}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                    className={`touch-target px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
                       isActive
                         ? `${activeAccentPrimary} text-white border-transparent`
                         : darkMode ? "border-slate-800 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -181,10 +181,14 @@ export function AdvancedSearchSheet({
                       darkMode ? "bg-slate-900 border-slate-800 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"
                     }`}>
                       {skill}
-                      <X
-                        className="h-3 w-3 cursor-pointer opacity-50 hover:opacity-100"
+                      <button
+                        type="button"
+                        aria-label={`Remove skill ${skill}`}
                         onClick={() => setAdvSkills(prev => prev.filter(s => s !== skill))}
-                      />
+                        className="touch-target -mr-2 text-slate-500 hover:text-slate-800"
+                      >
+                        <X className="h-3 w-3" aria-hidden="true" />
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -218,7 +222,7 @@ export function AdvancedSearchSheet({
                 <button
                   key={level}
                   onClick={() => setAdvExp(level)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                  className={`touch-target px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
                     advExp === level
                       ? `${activeAccentPrimary} text-white border-transparent`
                       : darkMode ? "border-slate-800 text-slate-300 hover:bg-slate-800" : "border-slate-200 text-slate-600 hover:bg-slate-50"

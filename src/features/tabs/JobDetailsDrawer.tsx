@@ -93,13 +93,15 @@ export function JobDetailsDrawer({
         <div className="flex items-center gap-2">
           <button
             onClick={() => onToggleSave(selectedJob.id)}
-            className={`p-1.5 rounded-full ${selectedJob.isSaved ? "text-rose-500" : "text-slate-400"}`}
+            aria-label={selectedJob.isSaved ? "Remove this role from saved jobs" : "Save this role"}
+            aria-pressed={Boolean(selectedJob.isSaved)}
+            className={`touch-target p-1.5 rounded-full ${selectedJob.isSaved ? "text-rose-500" : "text-slate-400"}`}
           >
             <Bookmark className="h-4 w-4 fill-current" style={{ fillOpacity: selectedJob.isSaved ? 1 : 0 }} />
           </button>
           <button
             onClick={() => onApplyOutbound(selectedJob, selectedJob.isApplied ? "reopen" : "apply")}
-            className={`p-1.5 rounded-full transition-colors ${darkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"}`}
+            className={`touch-target p-1.5 rounded-full transition-colors ${darkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"}`}
             title={selectedJob.isApplied ? "Re-open application in your browser" : "Apply on the company site"}
             aria-label={selectedJob.isApplied ? "Re-open application in your browser" : "Apply on the company site"}
           >
@@ -107,7 +109,7 @@ export function JobDetailsDrawer({
           </button>
           <button
             onClick={() => onShare(selectedJob)}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-600"
+            className="touch-target p-1.5 rounded-full text-slate-400 hover:text-slate-600"
             aria-label="Share this role"
             title="Share this role"
           >

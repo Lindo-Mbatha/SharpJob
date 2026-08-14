@@ -33,6 +33,9 @@ import {
 } from "./features/app/monitoring/productEvents";
 import { filterExploreJobs } from "./features/explore/selectors";
 import { deriveProfileStrength } from "./features/profile/selectors";
+import { notifyDevice } from "./features/app/monitoring/deviceNotifications";
+
+const SEEN_JOB_IDS_KEY = "sharpjob.jobs.seen.v1";
 
 // Accent options definition
 interface AccentStyle {
@@ -152,6 +155,10 @@ export default function App() {
     accessibilityTalkBackHints,
     accessibilityHighContrast,
     accessibilityReduceMotion,
+    accessibilityDyslexiaFont,
+    accessibilityReadableSpacing,
+    accessibilityReduceTransparency,
+    accessibilityFocusIndicators,
     accessibilityTextSize
   } = profileState;
 
@@ -192,6 +199,10 @@ export default function App() {
     setAccessibilityTalkBackHints,
     setAccessibilityHighContrast,
     setAccessibilityReduceMotion,
+    setAccessibilityDyslexiaFont,
+    setAccessibilityReadableSpacing,
+    setAccessibilityReduceTransparency,
+    setAccessibilityFocusIndicators,
     setAccessibilityTextSize,
     saveProfileDetails
   } = profileActions;
@@ -225,6 +236,7 @@ export default function App() {
   // Dynamic lists — loaded from Supabase
   const { jobs, setJobs, loadState: jobsLoadState, error: jobsError } = useJobs();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const processedJobsSnapshotRef = useRef<string | null>(null);
 
   const [homePage, setHomePage] = useState<number>(1);
   const [savedPage, setSavedPage] = useState<number>(1);
@@ -259,6 +271,34 @@ export default function App() {
     setAlertsFilter,
     triggerNotification
   } = alertsActions;
+
+  useEffect(() => {
+    if (jobsLoadState !== "success" || jobs.length === 0) return;
+
+    const jobIds = jobs.map(job => job.id).sort();
+    const snapshot = JSON.stringify(jobIds);
+    if (processedJobsSnapshotRef.current === snapshot) return;
+    processedJobsSnapshotRef.current = snapshot;
+
+    try {
+      const storedJobIds = window.localStorage.getItem(SEEN_JOB_IDS_KEY);
+      window.localStorage.setItem(SEEN_JOB_IDS_KEY, snapshot);
+      if (!storedJobIds) return;
+
+      const knownJobIds = new Set<string>(JSON.parse(storedJobIds) as string[]);
+      const newJobsCount = jobIds.filter(jobId => !knownJobIds.has(jobId)).length;
+      if (newJobsCount > 0) {
+        const message = `${newJobsCount} new job${newJobsCount === 1 ? "" : "s"} added. Check the Alerts tab for your latest SharpJob opportunities.`;
+        triggerNotification(
+          message,
+          "general"
+        );
+        void notifyDevice("New SharpJob opportunities", message);
+      }
+    } catch {
+      // Ignore unavailable or corrupt local storage and keep the job feed usable.
+    }
+  }, [jobs, jobsLoadState, triggerNotification]);
 
   const switchTab = (tab: AppTab) => {
     trackEvent("tab_switch", { from: activeTab, to: tab });
@@ -508,6 +548,44 @@ export default function App() {
     });
   };
 
+  const onHeadlineSaved = (headline: string) => {
+    const normalizedHeadline = headline.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (!normalizedHeadline) return;
+
+    const matchingJobs = jobs.filter(job => {
+      const normalizedTitle = job.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      return normalizedTitle.includes(normalizedHeadline) || normalizedHeadline.includes(normalizedTitle);
+    });
+
+    if (matchingJobs.length === 0) {
+      triggerNotification(`No published roles matched "${headline.trim()}" yet.`, "headline");
+      return;
+    }
+
+    setNotifications(previous => {
+      const newAlerts = matchingJobs
+        .filter(job => !previous.some(notification =>
+          notification.kind === "match" &&
+          notification.jobId === job.id &&
+          notification.desc.startsWith(`Headline match for "${headline.trim()}".`)
+        ))
+        .map((job, index) => ({
+          id: `headline-${Date.now()}-${index}`,
+          title: `Headline match: ${job.title}`,
+          desc: `Headline match for "${headline.trim()}". ${job.company} is hiring for this role. Open the job card to view the full listing.`,
+          time: "Just now",
+          read: false,
+          jobId: job.id,
+          kind: "match" as const,
+          category: "headline" as const
+        }));
+
+      return newAlerts.length > 0 ? [...newAlerts, ...previous] : previous;
+    });
+
+    triggerNotification(`Found ${matchingJobs.length} role${matchingJobs.length !== 1 ? "s" : ""} matching "${headline.trim()}". Open Headline Alerts to view them.`, "headline");
+  };
+
   const onRateApp = async () => {
     await requestAppRating(triggerNotification);
   };
@@ -536,6 +614,12 @@ export default function App() {
       isMobileView={isMobileView}
       darkMode={darkMode}
       accentColor={accentColor}
+      highContrast={accessibilityHighContrast}
+      reduceMotion={accessibilityReduceMotion}
+      dyslexiaFont={accessibilityDyslexiaFont}
+      readableSpacing={accessibilityReadableSpacing}
+      reduceTransparency={accessibilityReduceTransparency}
+      focusIndicators={accessibilityFocusIndicators}
     >
             
             <TopStatusToastOverlay
@@ -684,7 +768,6 @@ export default function App() {
                   savedVisibleCount={savedVisibleCount}
                   profileStrengthLabel={profileStrengthLabel}
                   profileSubScreen={profileSubScreen}
-                  jobs={jobs}
                   applicantName={applicantName}
                   applicantEmail={applicantEmail}
                   applicantPhone={applicantPhone}
@@ -721,6 +804,10 @@ export default function App() {
                   accessibilityTalkBackHints={accessibilityTalkBackHints}
                   accessibilityHighContrast={accessibilityHighContrast}
                   accessibilityReduceMotion={accessibilityReduceMotion}
+                  accessibilityDyslexiaFont={accessibilityDyslexiaFont}
+                  accessibilityReadableSpacing={accessibilityReadableSpacing}
+                  accessibilityReduceTransparency={accessibilityReduceTransparency}
+                  accessibilityFocusIndicators={accessibilityFocusIndicators}
                   accessibilityTextSize={accessibilityTextSize}
                   setDarkMode={setDarkMode}
                   setAccentColor={setAccentColor}
@@ -759,10 +846,15 @@ export default function App() {
                   setAccessibilityTalkBackHints={setAccessibilityTalkBackHints}
                   setAccessibilityHighContrast={setAccessibilityHighContrast}
                   setAccessibilityReduceMotion={setAccessibilityReduceMotion}
+                  setAccessibilityDyslexiaFont={setAccessibilityDyslexiaFont}
+                  setAccessibilityReadableSpacing={setAccessibilityReadableSpacing}
+                  setAccessibilityReduceTransparency={setAccessibilityReduceTransparency}
+                  setAccessibilityFocusIndicators={setAccessibilityFocusIndicators}
                   setAccessibilityTextSize={setAccessibilityTextSize}
                   onGoToSaved={() => switchTab("saved")}
                   onMockUpload={handleMockUpload}
                   onProfileSaved={onProfileSavedTracked}
+                  onHeadlineSaved={onHeadlineSaved}
                   onRateApp={onRateApp}
                   triggerNotification={triggerNotification}
                 />

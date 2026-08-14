@@ -4,6 +4,162 @@
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 }
 
+.high-contrast {
+}
+
+.high-contrast :where(.text-slate-400, .text-slate-500) {
+  color: #334155;
+}
+
+.high-contrast :where(.text-slate-600) {
+  color: #1e293b;
+}
+
+.high-contrast :where(.border-slate-100, .border-slate-200, .border-slate-200\/60, .border-slate-200\/70) {
+  border-color: #64748b;
+}
+
+.high-contrast :where(.bg-slate-50, .bg-slate-50\/60, .bg-slate-50\/80) {
+  background-color: #f8fafc;
+}
+
+.high-contrast :where(button, input, textarea, select):focus-visible {
+  outline: 3px solid #0f172a;
+  outline-offset: 2px;
+}
+
+.high-contrast :where(.text-emerald-500, .text-emerald-600, .text-emerald-700) {
+  color: #047857;
+}
+
+.high-contrast :where(.text-amber-500, .text-amber-600) {
+  color: #92400e;
+}
+
+.high-contrast :where(.text-red-500, .text-red-600, .text-rose-500) {
+  color: #b91c1c;
+}
+
+.high-contrast-dark :where(.text-slate-400, .text-slate-500) {
+  color: #cbd5e1;
+}
+
+.high-contrast-dark :where(.text-slate-600) {
+  color: #e2e8f0;
+}
+
+.high-contrast-dark :where(.border-slate-100, .border-slate-200, .border-slate-200\/60, .border-slate-200\/70) {
+  border-color: #94a3b8;
+}
+
+.high-contrast-dark :where(.text-emerald-500, .text-emerald-600, .text-emerald-700) {
+  color: #6ee7b7;
+}
+
+.high-contrast-dark :where(.text-amber-500, .text-amber-600) {
+  color: #fcd34d;
+}
+
+.high-contrast-dark :where(.text-red-500, .text-red-600, .text-rose-500) {
+  color: #fca5a5;
+}
+
+.touch-target {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.touch-target::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+}
+
+.reduce-motion :where(*, *::before, *::after) {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.001ms !important;
+}
+
+.reduce-motion .animate-confetti-fall {
+  display: none;
+}
+
+.dyslexia-font,
+.dyslexia-font :where(button, input, textarea, select) {
+  font-family: "Comic Sans MS", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+.readable-spacing,
+.readable-spacing :where(button, input, textarea, select) {
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+}
+
+.reduce-transparency .filter {
+  display: none;
+}
+
+.reduce-transparency :where(.bg-black\/60) {
+  background-color: #000;
+}
+
+.reduce-transparency :where(.bg-slate-900\/40, .bg-slate-900\/60, .bg-slate-900\/80) {
+  background-color: #0f172a;
+}
+
+.reduce-transparency :where(.bg-slate-50\/60, .bg-slate-50\/80, .bg-white\/60) {
+  background-color: #f8fafc;
+}
+
+.reduce-transparency :where(.bg-rose-50\/50, .bg-rose-50\/60, .bg-rose-50\/80) {
+  background-color: #fff1f2;
+}
+
+.reduce-transparency :where(.bg-amber-950\/30) {
+  background-color: #451a03;
+}
+
+.reduce-transparency :where(.bg-amber-50\/30) {
+  background-color: #fffbeb;
+}
+
+.focus-indicators :where(button, a, input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.focus-indicators :where(button, a, input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline-width: 4px;
+}
+
+.high-contrast-dark.focus-indicators :where(button, a, input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"])):focus {
+  outline-color: #facc15;
+  box-shadow: 0 0 0 2px #0f172a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(*, *::before, *::after) {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :where(button, input, textarea, select):focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
 /* Custom scrollbar design for the card list inside mock frame */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

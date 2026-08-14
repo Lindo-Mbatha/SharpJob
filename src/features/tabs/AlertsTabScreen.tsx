@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowLeft, BellRing, Check, ChevronRight, Trash2 } from "lucide-react";
 import { AlertNotification } from "../alerts/types";
+import { AlertCategory } from "../alerts/types";
 import { Job } from "../listings/types";
 import { getCategoryStyles } from "../listings/utils";
 import { AlertsFilter } from "../app/types/domain";
@@ -32,10 +33,66 @@ export function AlertsTabScreen({
   setSelectedJob: React.Dispatch<React.SetStateAction<Job | null>>;
   triggerNotification: (message: string) => void;
 }) {
+  const getAlertCategory = (notification: AlertNotification): AlertCategory => {
+    if (notification.category) return notification.category;
+    if (notification.kind === "match") return "headline";
+    return "system";
+  };
+
   const selectedNotif = selectedNotificationId ? notifications.find(n => n.id === selectedNotificationId) || null : null;
-  const visibleNotifs = notifications.filter(n => alertsFilter === "all" ? true : !n.read);
+  const visibleNotifs = notifications.filter(n => {
+    if (alertsFilter === "unread") return !n.read;
+    if (alertsFilter === "all") return true;
+    return getAlertCategory(n) === alertsFilter;
+  });
   const unreadCount = notifications.filter(n => !n.read).length;
   const linkedJob = selectedNotif?.jobId ? jobs.find(j => j.id === selectedNotif.jobId) || null : null;
+  const filterDragRef = React.useRef<{
+    active: boolean;
+    pointerId: number | null;
+    startX: number;
+    startScrollLeft: number;
+    moved: boolean;
+  }>({ active: false, pointerId: null, startX: 0, startScrollLeft: 0, moved: false });
+  const suppressFilterClickRef = React.useRef(false);
+
+  const onFilterPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    filterDragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: event.currentTarget.scrollLeft,
+      moved: false
+    };
+  };
+
+  const onFilterPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = filterDragRef.current;
+    if (!drag.active || drag.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - drag.startX;
+    if (!drag.moved && Math.abs(deltaX) < 8) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      suppressFilterClickRef.current = true;
+    }
+    event.currentTarget.scrollLeft = drag.startScrollLeft - deltaX;
+    event.preventDefault();
+  };
+
+  const onFilterPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (filterDragRef.current.pointerId !== event.pointerId) return;
+    filterDragRef.current.active = false;
+    filterDragRef.current.pointerId = null;
+  };
+
+  const onFilterClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (suppressFilterClickRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressFilterClickRef.current = false;
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col relative">
@@ -65,15 +122,28 @@ export function AlertsTabScreen({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 select-none">
-            {(["all", "unread"] as const).map(f => {
+          <div
+            className="min-w-0 max-w-full flex items-center gap-1.5 select-none overflow-x-auto overflow-y-hidden no-scrollbar pb-1 flex-nowrap cursor-grab active:cursor-grabbing"
+            onPointerDown={onFilterPointerDown}
+            onPointerMove={onFilterPointerMove}
+            onPointerUp={onFilterPointerEnd}
+            onPointerCancel={onFilterPointerEnd}
+            onClickCapture={onFilterClickCapture}
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
+          >
+            {(["all", "general", "system", "headline", "unread"] as const).map(f => {
               const isActive = alertsFilter === f;
-              const count = f === "all" ? notifications.length : unreadCount;
+              const count = f === "all"
+                ? notifications.length
+                : f === "unread"
+                  ? unreadCount
+                  : notifications.filter(notification => getAlertCategory(notification) === f).length;
+              const label = f === "all" ? "All" : f === "unread" ? "Unread" : f.charAt(0).toUpperCase() + f.slice(1);
               return (
                 <button
                   key={f}
                   onClick={() => setAlertsFilter(f)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+                  className={`touch-target shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
                     isActive
                       ? `${activeAccentPrimary} text-white border-transparent`
                       : (darkMode
@@ -81,7 +151,7 @@ export function AlertsTabScreen({
                           : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100")
                   }`}
                 >
-                  {f}
+                  {label}
                   <span className={`text-[9px] px-1 rounded-full ${
                     isActive ? "bg-white/20" : (darkMode ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-500")
                   }`}>
@@ -97,7 +167,7 @@ export function AlertsTabScreen({
               <div className="py-16 text-center text-slate-400">
                 <BellRing className="h-10 w-10 text-slate-500 mx-auto mb-2 opacity-40" />
                 <p className="text-sm font-semibold">
-                  {alertsFilter === "unread" ? "Inbox zero - nicely done." : "No alerts yet."}
+                  {alertsFilter === "unread" ? "Inbox zero - nicely done." : `No ${alertsFilter === "all" ? "" : `${alertsFilter} `}alerts yet.`}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   {alertsFilter === "unread"
@@ -108,6 +178,7 @@ export function AlertsTabScreen({
             ) : visibleNotifs.map((n, idx) => (
               <button
                 key={n.id}
+                  aria-label={`${n.read ? "Read" : "Unread"} alert: ${n.title}. ${n.desc}`}
                 onClick={() => {
                   setSelectedNotificationId(n.id);
                   setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
@@ -159,6 +230,9 @@ export function AlertsTabScreen({
                         {n.time}
                       </span>
                     </div>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                      {getAlertCategory(n)} alert
+                    </span>
                     <p className={`mt-1 text-[11px] leading-relaxed text-slate-500 line-clamp-2 ${
                       !n.read ? (darkMode ? "text-slate-300" : "text-slate-600") : ""
                     }`}>
@@ -199,6 +273,7 @@ export function AlertsTabScreen({
                 setSelectedNotificationId(null);
                 triggerNotification("Alert dismissed.");
               }}
+              aria-label="Delete alert"
               className="p-1.5 text-slate-400 hover:text-red-500"
               title="Dismiss"
             >
@@ -216,7 +291,7 @@ export function AlertsTabScreen({
                 selectedNotif.kind === "profile" ? "bg-sky-50 text-sky-700 border-sky-100" :
                 "bg-slate-50 text-slate-600 border-slate-200"
               }`}>
-                {selectedNotif.kind || "update"}
+                {getAlertCategory(selectedNotif)} alert
               </span>
               <span className="text-[10px] text-slate-400 font-semibold">{selectedNotif.time}</span>
               {selectedNotif.read && (

@@ -12,11 +12,23 @@ export function PhoneShellFrame({
   isMobileView,
   darkMode,
   accentColor,
+  highContrast,
+  reduceMotion,
+  dyslexiaFont,
+  readableSpacing,
+  reduceTransparency,
+  focusIndicators,
   children
 }: {
   isMobileView: boolean;
   darkMode: boolean;
   accentColor: string;
+  highContrast: boolean;
+  reduceMotion: boolean;
+  dyslexiaFont: boolean;
+  readableSpacing: boolean;
+  reduceTransparency: boolean;
+  focusIndicators: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -47,7 +59,7 @@ export function PhoneShellFrame({
 
           <div className={`w-full h-full ${isMobileView ? "rounded-none" : "rounded-[40px]"} overflow-hidden flex flex-col relative ${
             darkMode ? "bg-slate-950 text-slate-100" : "bg-white text-slate-800"
-          }`}>
+          } ${highContrast ? `high-contrast ${darkMode ? "high-contrast-dark" : ""}` : ""} ${reduceMotion ? "reduce-motion" : ""} ${dyslexiaFont ? "dyslexia-font" : ""} ${readableSpacing ? "readable-spacing" : ""} ${reduceTransparency ? "reduce-transparency" : ""} ${focusIndicators ? "focus-indicators" : ""}`}>
             {children}
 
             {!isMobileView && (

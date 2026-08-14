@@ -1,4 +1,5 @@
 export type AlertKind = "match" | "interview" | "viewed" | "reminder" | "system" | "profile";
+export type AlertCategory = "general" | "system" | "headline";
 
 export interface AlertNotification {
   id: string;
@@ -8,4 +9,5 @@ export interface AlertNotification {
   read: boolean;
   jobId?: string;
   kind?: AlertKind;
+  category?: AlertCategory;
 }

@@ -23,6 +23,10 @@ type PersistedAccessibilitySettings = {
   accessibilityTalkBackHints: boolean;
   accessibilityHighContrast: boolean;
   accessibilityReduceMotion: boolean;
+  accessibilityDyslexiaFont: boolean;
+  accessibilityReadableSpacing: boolean;
+  accessibilityReduceTransparency: boolean;
+  accessibilityFocusIndicators: boolean;
   accessibilityTextSize: AccessibilityTextSize;
 };
 
@@ -117,6 +121,10 @@ export function useProfileSettings() {
   const [accessibilityTalkBackHints, setAccessibilityTalkBackHints] = useState<boolean>(false);
   const [accessibilityHighContrast, setAccessibilityHighContrast] = useState<boolean>(false);
   const [accessibilityReduceMotion, setAccessibilityReduceMotion] = useState<boolean>(false);
+  const [accessibilityDyslexiaFont, setAccessibilityDyslexiaFont] = useState<boolean>(false);
+  const [accessibilityReadableSpacing, setAccessibilityReadableSpacing] = useState<boolean>(false);
+  const [accessibilityReduceTransparency, setAccessibilityReduceTransparency] = useState<boolean>(false);
+  const [accessibilityFocusIndicators, setAccessibilityFocusIndicators] = useState<boolean>(false);
   const [accessibilityTextSize, setAccessibilityTextSize] = useState<AccessibilityTextSize>("Default");
 
   useEffect(() => {
@@ -156,6 +164,10 @@ export function useProfileSettings() {
           setAccessibilityTalkBackHints(Boolean(parsedAccessibility.accessibilityTalkBackHints));
           setAccessibilityHighContrast(Boolean(parsedAccessibility.accessibilityHighContrast));
           setAccessibilityReduceMotion(Boolean(parsedAccessibility.accessibilityReduceMotion));
+          setAccessibilityDyslexiaFont(Boolean(parsedAccessibility.accessibilityDyslexiaFont));
+          setAccessibilityReadableSpacing(Boolean(parsedAccessibility.accessibilityReadableSpacing));
+          setAccessibilityReduceTransparency(Boolean(parsedAccessibility.accessibilityReduceTransparency));
+          setAccessibilityFocusIndicators(Boolean(parsedAccessibility.accessibilityFocusIndicators));
           setAccessibilityTextSize(
             typeof parsedAccessibility.accessibilityTextSize === "string" &&
               validTextSizes.includes(parsedAccessibility.accessibilityTextSize as AccessibilityTextSize)
@@ -205,6 +217,10 @@ export function useProfileSettings() {
       accessibilityTalkBackHints,
       accessibilityHighContrast,
       accessibilityReduceMotion,
+      accessibilityDyslexiaFont,
+      accessibilityReadableSpacing,
+      accessibilityReduceTransparency,
+      accessibilityFocusIndicators,
       accessibilityTextSize
     };
 
@@ -213,6 +229,10 @@ export function useProfileSettings() {
     accessibilityTalkBackHints,
     accessibilityHighContrast,
     accessibilityReduceMotion,
+    accessibilityDyslexiaFont,
+    accessibilityReadableSpacing,
+    accessibilityReduceTransparency,
+    accessibilityFocusIndicators,
     accessibilityTextSize
   ]);
 
@@ -254,6 +274,10 @@ export function useProfileSettings() {
       accessibilityTalkBackHints,
       accessibilityHighContrast,
       accessibilityReduceMotion,
+      accessibilityDyslexiaFont,
+      accessibilityReadableSpacing,
+      accessibilityReduceTransparency,
+      accessibilityFocusIndicators,
       accessibilityTextSize
     },
     actions: {
@@ -293,6 +317,10 @@ export function useProfileSettings() {
       setAccessibilityTalkBackHints,
       setAccessibilityHighContrast,
       setAccessibilityReduceMotion,
+      setAccessibilityDyslexiaFont,
+      setAccessibilityReadableSpacing,
+      setAccessibilityReduceTransparency,
+      setAccessibilityFocusIndicators,
       setAccessibilityTextSize,
       saveProfileDetails
     }

@@ -60,6 +60,15 @@ export function JobCard({
   return (
     <div
       onClick={() => onSelect(job)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(job);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View job: ${job.title} at ${job.company}`}
       className={`rounded-xl border p-4 transition-all duration-200 group cursor-pointer ${
         variant === "saved" ? "relative" : ""
       } ${
@@ -89,25 +98,27 @@ export function JobCard({
           </p>
         </div>
 
-        {variant === "saved" ? (
-          <button
-            onClick={(e) => onToggleSave(job.id, e)}
-            className="p-1.5 rounded-full transition-colors shrink-0 text-red-500 bg-red-50/50 hover:bg-red-100/50"
-          >
-            <Trash2 className="h-4.5 w-4.5" />
-          </button>
-        ) : (
-          <button
-            onClick={(e) => onToggleSave(job.id, e)}
-            className={`p-1.5 rounded-full transition-colors shrink-0 ${
-              job.isSaved
-                ? `${activeAccentText} bg-rose-50/50`
-                : "text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            <Bookmark className="h-4.5 w-4.5 fill-current" style={{ fillOpacity: job.isSaved ? 1 : 0 }} />
-          </button>
-        )}
+              {variant === "saved" ? (
+                <button
+                  onClick={(e) => onToggleSave(job.id, e)}
+                  aria-label={`Remove ${job.title} from saved jobs`}
+                  className="touch-target p-1.5 rounded-full transition-colors shrink-0 text-red-500 bg-red-50/50 hover:bg-red-100/50"
+                >
+                  <Trash2 className="h-4.5 w-4.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => onToggleSave(job.id, e)}
+                  aria-label={job.isSaved ? `Remove ${job.title} from saved jobs` : `Save ${job.title}`}
+                  className={`touch-target p-1.5 rounded-full transition-colors shrink-0 ${
+                    job.isSaved
+                      ? `${activeAccentText} bg-rose-50/50`
+                      : "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  <Bookmark className="h-4.5 w-4.5 fill-current" style={{ fillOpacity: job.isSaved ? 1 : 0 }} />
+                </button>
+              )}
       </div>
 
       <div className="grid grid-cols-3 gap-2 mt-3.5 pt-0.5 text-[11px] text-slate-500 select-none">

@@ -158,7 +158,8 @@ export function ExploreTabScreen({
             {exploreQuery && (
               <button
                 onClick={() => setExploreQuery("")}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                aria-label="Clear job search"
+                className="touch-target absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -166,7 +167,7 @@ export function ExploreTabScreen({
           </div>
           <button
             onClick={onOpenAdvancedSearch}
-            className={`p-2 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
+            className={`touch-target p-2 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
               isAdvSearchApplied
                 ? `${activeAccentText} bg-opacity-20 border-current shadow-sm ${darkMode ? "bg-slate-800" : "bg-slate-100"}`
                 : (darkMode ? "border-slate-800 text-slate-400 hover:bg-slate-800" : "border-slate-200 text-slate-500 hover:bg-slate-100")
@@ -193,7 +194,7 @@ export function ExploreTabScreen({
               <button
                 key={cat}
                 onClick={() => setExploreCategory(cat)}
-                className={`px-3 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0 border transition-all ${
+                className={`touch-target px-3 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0 border transition-all ${
                   isSelected
                     ? `${activeAccentPrimary} border-transparent text-white`
                     : darkMode
@@ -232,7 +233,7 @@ export function ExploreTabScreen({
               <button
                 key={value}
                 onClick={() => setExploreType(value)}
-                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${
+                className={`touch-target px-2 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${
                   isSelected
                     ? "bg-slate-800 text-white border-b-2 border-slate-400"
                     : "text-slate-400 hover:text-slate-600"

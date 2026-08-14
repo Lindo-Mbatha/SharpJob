@@ -68,7 +68,7 @@ export function TopStatusToastOverlay({
             </div>
             <button
               onClick={onDismissToast}
-              className="text-slate-400 hover:text-white p-0.5"
+              className="touch-target text-slate-400 hover:text-white p-0.5"
               aria-label="Dismiss notification"
             >
               <X className="h-3.5 w-3.5" />

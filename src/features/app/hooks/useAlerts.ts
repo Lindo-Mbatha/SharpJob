@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { AlertNotification } from "../../alerts/types";
+import { AlertCategory } from "../../alerts/types";
 import { countUnreadAlerts } from "../../alerts/selectors";
 import { AlertsFilter } from "../types/domain";
 
 const INITIAL_NOTIFICATIONS: AlertNotification[] = [
-  { id: "1", title: "Welcome to SharpJob! 🎉", kind: "system", desc: "Your account is live. Start with the Home feed for a curated shortlist, or jump into Explore to dial things in with Advanced Search. Pro tip: tap the bookmark on any card to build a save-list you can apply to later in a single tap.", time: "Just now", read: false },
-  { id: "2", title: "Profile Setup Is Optional ℹ️", kind: "system", desc: "You can edit your details any time in Edit Profile under the Profile tab. Pro tip: Add your target job position in your Headline to get instant notifications when matching roles become available. This is optional for now, and some profile-based recruiter features will roll out in future updates.", time: "Just now", read: false }
+  { id: "1", title: "Welcome to SharpJob! 🎉", kind: "system", category: "general", desc: "Your account is live. Start with the Home feed for a curated shortlist, or jump into Explore to dial things in with Advanced Search. Pro tip: tap the bookmark on any card to build a save-list you can apply to later in a single tap.", time: "Just now", read: false },
+  { id: "2", title: "Profile Setup Is Optional ℹ️", kind: "system", category: "general", desc: "You can edit your details any time in Edit Profile under the Profile tab. Pro tip: Add your target job position in your Headline to get instant notifications when matching roles become available. This is optional for now, and some profile-based recruiter features will roll out in future updates.", time: "Just now", read: false }
 ];
 
 export function useAlerts({
@@ -38,7 +39,7 @@ export function useAlerts({
     });
   }, [profileStrengthLabel, profileMissingCount]);
 
-  const triggerNotification = (message: string) => {
+  const triggerNotification = (message: string, category: AlertCategory = "system") => {
     setNotifications(prev => {
       const newId = (prev.length + 1).toString();
       const newNotif: AlertNotification = {
@@ -46,7 +47,8 @@ export function useAlerts({
         title: "SharpJob Alert 🔔",
         desc: message,
         time: "Just now",
-        read: false
+        read: false,
+        category
       };
       return [newNotif, ...prev];
     });

@@ -130,6 +130,15 @@ export function SavedTabScreen({
                 <div
                   key={`previous-${job.id}`}
                   onClick={() => onSelectJob(job)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelectJob(job);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View previous listing: ${job.title} at ${job.company}`}
                   className={`rounded-lg border p-2.5 cursor-pointer transition-colors ${darkMode ? "bg-slate-900 border-slate-800 hover:border-slate-700" : "bg-white border-slate-200 hover:border-slate-300"}`}
                 >
                   <div className="flex items-start gap-2">
@@ -146,6 +155,7 @@ export function SavedTabScreen({
                         e.stopPropagation();
                         onExportListing(job, { closedDate, expiresAt });
                       }}
+                      aria-label={`Export ${job.title} as a text file`}
                       className={`shrink-0 px-2 py-1 rounded-md border text-[10px] font-bold transition-colors ${darkMode ? "border-slate-700 text-slate-200 hover:bg-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-100"}`}
                     >
                       Export TXT
