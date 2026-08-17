@@ -1,5 +1,5 @@
 import React from "react";
-import { Bookmark, ChevronDown } from "lucide-react";
+import { Bookmark, CalendarDays, ChevronDown } from "lucide-react";
 import { PREVIOUS_LISTING_RETENTION_DAYS } from "../listings/constants";
 import { JobCard } from "../listings/components/JobCard";
 import { PaginationControls } from "../listings/components/PaginationControls";
@@ -22,7 +22,8 @@ export function SavedTabScreen({
   onNextPage,
   onSelectPage,
   onExploreListings,
-  onExportListing
+  onExportListing,
+  onUpdateInterviewTracker
 }: {
   darkMode: boolean;
   activeAccentText: string;
@@ -41,7 +42,58 @@ export function SavedTabScreen({
   onSelectPage: (page: number) => void;
   onExploreListings: () => void;
   onExportListing: (job: Job, archiveInfo: { closedDate: Date; expiresAt: Date }) => void;
+  onUpdateInterviewTracker: (jobId: string, status: NonNullable<Job["interviewTrackerStatus"]>, interviewDate?: string) => void;
 }) {
+  const savedForLaterJobs = savedJobsPage.filter(job => !job.isApplied);
+  const appliedSavedJobs = savedJobsPage.filter(job => job.isApplied);
+
+  const renderSavedJob = (job: Job) => (
+    <div key={job.id} className="space-y-2">
+      <JobCard
+        job={job}
+        darkMode={darkMode}
+        activeAccentText={activeAccentText}
+        variant="saved"
+        onSelect={onSelectJob}
+        onToggleSave={onToggleSave}
+      />
+      {job.isApplied && (
+        <div className={`rounded-xl border p-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+          <div className="flex items-center gap-2">
+            <CalendarDays className={`h-4 w-4 shrink-0 ${activeAccentText}`} aria-hidden="true" />
+            <label htmlFor={`interview-status-${job.id}`} className={`text-[11px] font-bold ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
+              Interview tracker
+            </label>
+          </div>
+          <select
+            id={`interview-status-${job.id}`}
+            value={job.interviewTrackerStatus ?? "waiting_response"}
+            onChange={(event) => onUpdateInterviewTracker(job.id, event.target.value as NonNullable<Job["interviewTrackerStatus"]>, job.interviewDate)}
+            className={`mt-2 w-full rounded-lg border px-2.5 py-2 text-xs font-semibold focus:outline-none ${darkMode ? "bg-slate-950 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-800"}`}
+          >
+            <option value="waiting_response">Waiting for a response</option>
+            <option value="waiting_date">Waiting for an interview date</option>
+            <option value="scheduled">I have an interview</option>
+          </select>
+          {job.interviewTrackerStatus === "scheduled" && (
+            <div className="mt-2">
+              <label htmlFor={`interview-date-${job.id}`} className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Interview date and time
+              </label>
+              <input
+                id={`interview-date-${job.id}`}
+                type="datetime-local"
+                value={job.interviewDate ?? ""}
+                onChange={(event) => onUpdateInterviewTracker(job.id, "scheduled", event.target.value)}
+                className={`w-full rounded-lg border px-2.5 py-2 text-xs focus:outline-none ${darkMode ? "bg-slate-950 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-800"}`}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="p-5 space-y-4 flex-1 flex flex-col">
       <div>
@@ -55,17 +107,31 @@ export function SavedTabScreen({
 
       <div className="space-y-4 flex-1">
         {activeSavedJobs.length > 0 ? (
-          savedJobsPage.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              darkMode={darkMode}
-              activeAccentText={activeAccentText}
-              variant="saved"
-              onSelect={onSelectJob}
-              onToggleSave={onToggleSave}
-            />
-          ))
+          <>
+            {savedForLaterJobs.length > 0 && (
+              <section className="space-y-2" aria-labelledby="saved-for-later-heading">
+                <div className="flex items-center justify-between px-1">
+                  <h3 id="saved-for-later-heading" className={`text-[11px] font-bold uppercase tracking-wider ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
+                    Saved for later
+                  </h3>
+                  <span className="text-[10px] font-semibold text-slate-500">{savedForLaterJobs.length}</span>
+                </div>
+                {savedForLaterJobs.map(renderSavedJob)}
+              </section>
+            )}
+
+            {appliedSavedJobs.length > 0 && (
+              <section className="space-y-2" aria-labelledby="applied-jobs-heading">
+                <div className="flex items-center justify-between px-1 pt-2">
+                  <h3 id="applied-jobs-heading" className={`text-[11px] font-bold uppercase tracking-wider ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
+                    Applied
+                  </h3>
+                  <span className="text-[10px] font-semibold text-slate-500">{appliedSavedJobs.length}</span>
+                </div>
+                {appliedSavedJobs.map(renderSavedJob)}
+              </section>
+            )}
+          </>
         ) : (
           <div className="py-16 text-center text-slate-400">
             <Bookmark className="h-10 w-10 text-slate-500 mx-auto mb-2 opacity-40" />

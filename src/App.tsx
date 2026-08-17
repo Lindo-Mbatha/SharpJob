@@ -4,7 +4,7 @@ import splashBackground from "./assets/backgroundblue.jpg";
 import { LISTINGS_PER_PAGE } from "./features/listings/constants";
 import { useJobs } from "./features/listings/useJobs";
 import { Job, PreviousSavedListing } from "./features/listings/types";
-import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings } from "./features/listings/utils";
+import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings, parseJobCloseDate } from "./features/listings/utils";
 import { countAppliedJobs, countSavedVisible, paginateItems } from "./features/listings/selectors";
 import { HomeTabScreen } from "./features/tabs/HomeTabScreen";
 import { ExploreTabScreen } from "./features/tabs/ExploreTabScreen";
@@ -22,7 +22,7 @@ import { useApplyFlow } from "./features/app/hooks/useApplyFlow";
 import { useJobActions } from "./features/app/hooks/useJobActions";
 import { useDeviceStatus } from "./features/app/hooks/useDeviceStatus";
 import { useExploreFilters } from "./features/app/hooks/useExploreFilters";
-import { useProfileSettings } from "./features/app/hooks/useProfileSettings";
+import { readStoredValue, useProfileSettings, writeStoredValue } from "./features/app/hooks/useProfileSettings";
 import { AppTab, ApplyOutboundMode } from "./features/app/types/domain";
 import { trackEvent, trackScreenView } from "./features/app/monitoring/telemetry";
 import { requestAppRating } from "./features/app/monitoring/rateApp";
@@ -33,9 +33,13 @@ import {
 } from "./features/app/monitoring/productEvents";
 import { filterExploreJobs } from "./features/explore/selectors";
 import { deriveProfileStrength } from "./features/profile/selectors";
-import { notifyDevice } from "./features/app/monitoring/deviceNotifications";
+import { triggerHapticFeedback } from "./features/app/monitoring/haptics";
+import { notifyDevice, scheduleClosingDateReminders, scheduleInterviewReminders } from "./features/app/monitoring/deviceNotifications";
+import { getNotificationDeliveryTime } from "./features/app/monitoring/notificationDelivery";
 
 const SEEN_JOB_IDS_KEY = "sharpjob.jobs.seen.v1";
+const JOB_STATE_KEY = "sharpjob.jobs.state.v1";
+const RESUME_SELECTION_KEY = "sharpjob.resume.selection.v1";
 
 // Accent options definition
 interface AccentStyle {
@@ -136,7 +140,6 @@ export default function App() {
     autoAttachResume,
     prefMatches,
     prefInterviews,
-    prefViews,
     prefReminders,
     prefDigest,
     prefFrequency,
@@ -144,11 +147,8 @@ export default function App() {
     prefQuietTo,
     prefEmail,
     prefPush,
-    settingWifiOnly,
     settingHaptics,
-    settingSound,
     settingLanguage,
-    cacheMB,
     helpQuery,
     helpOpenFaq,
     feedbackText,
@@ -180,7 +180,6 @@ export default function App() {
     setAutoAttachResume,
     setPrefMatches,
     setPrefInterviews,
-    setPrefViews,
     setPrefReminders,
     setPrefDigest,
     setPrefFrequency,
@@ -188,11 +187,8 @@ export default function App() {
     setPrefQuietTo,
     setPrefEmail,
     setPrefPush,
-    setSettingWifiOnly,
     setSettingHaptics,
-    setSettingSound,
     setSettingLanguage,
-    setCacheMB,
     setHelpQuery,
     setHelpOpenFaq,
     setFeedbackText,
@@ -237,6 +233,9 @@ export default function App() {
   const { jobs, setJobs, loadState: jobsLoadState, error: jobsError } = useJobs();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const processedJobsSnapshotRef = useRef<string | null>(null);
+  const interviewReminderTimersRef = useRef<number[]>([]);
+  const closingReminderTimersRef = useRef<number[]>([]);
+  const hasHydratedDurableStateRef = useRef(false);
 
   const [homePage, setHomePage] = useState<number>(1);
   const [savedPage, setSavedPage] = useState<number>(1);
@@ -269,8 +268,27 @@ export default function App() {
     setNotifications,
     setSelectedNotificationId,
     setAlertsFilter,
-    triggerNotification
+    triggerNotification: createAlert
   } = alertsActions;
+
+  const triggerNotification = (message: string, category: "general" | "system" | "headline" = "system") => {
+    const deliveryTime = getNotificationDeliveryTime(prefFrequency, prefQuietFrom, prefQuietTo);
+    const delay = deliveryTime.getTime() - Date.now();
+    const hasDeferredDeviceNotification = prefPush && delay > 0;
+    const deliver = () => {
+      createAlert(message, category);
+      void triggerHapticFeedback(settingHaptics);
+      if (prefPush && !hasDeferredDeviceNotification) void notifyDevice("SharpJob", message);
+    };
+
+    if (delay <= 0) {
+      deliver();
+      return;
+    }
+
+    window.setTimeout(deliver, delay);
+    if (hasDeferredDeviceNotification) void notifyDevice("SharpJob", message, deliveryTime);
+  };
 
   useEffect(() => {
     if (jobsLoadState !== "success" || jobs.length === 0) return;
@@ -286,19 +304,125 @@ export default function App() {
       if (!storedJobIds) return;
 
       const knownJobIds = new Set<string>(JSON.parse(storedJobIds) as string[]);
-      const newJobsCount = jobIds.filter(jobId => !knownJobIds.has(jobId)).length;
-      if (newJobsCount > 0) {
-        const message = `${newJobsCount} new job${newJobsCount === 1 ? "" : "s"} added. Check the Alerts tab for your latest SharpJob opportunities.`;
-        triggerNotification(
-          message,
-          "general"
-        );
-        void notifyDevice("New SharpJob opportunities", message);
-      }
+      const normalizedHeadline = applicantHeadline.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      if (!prefMatches || !normalizedHeadline) return;
+
+      const newMatches = jobs.filter(job => {
+        if (knownJobIds.has(job.id)) return false;
+        const normalizedTitle = job.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+        return normalizedTitle.includes(normalizedHeadline) || normalizedHeadline.includes(normalizedTitle);
+      });
+      if (newMatches.length === 0) return;
+
+      setNotifications(previous => {
+        const newAlerts = newMatches
+          .filter(job => !previous.some(notification =>
+            notification.kind === "match" &&
+            notification.jobId === job.id &&
+            notification.desc.startsWith(`New headline match for "${applicantHeadline.trim()}".`)
+          ))
+          .map((job, index) => ({
+            id: `new-match-${Date.now()}-${index}`,
+            title: `New match: ${job.title}`,
+            desc: `New headline match for "${applicantHeadline.trim()}". ${job.company} has just added this role. Open the job card to view the listing.`,
+            time: "Just now",
+            read: false,
+            jobId: job.id,
+            kind: "match" as const,
+            category: "headline" as const
+          }));
+
+        return newAlerts.length > 0 ? [...newAlerts, ...previous] : previous;
+      });
+
+      const message = `${newMatches.length} new job match${newMatches.length === 1 ? "" : "es"} for your headline "${applicantHeadline.trim()}". Check Headline Alerts to view them.`;
+      void notifyDevice("New SharpJob matches", message);
     } catch {
       // Ignore unavailable or corrupt local storage and keep the job feed usable.
     }
-  }, [jobs, jobsLoadState, triggerNotification]);
+  }, [applicantHeadline, jobs, jobsLoadState, prefMatches, setNotifications]);
+
+  useEffect(() => {
+    interviewReminderTimersRef.current.forEach(timer => window.clearTimeout(timer));
+    interviewReminderTimersRef.current = [];
+
+    const reminderHours = [6, 3, 1] as const;
+    for (const job of jobs) {
+      if (!job.isSaved || !job.isApplied) continue;
+      const shouldSchedule = prefInterviews && job.interviewTrackerStatus === "scheduled";
+      void scheduleInterviewReminders(job.id, job.title, job.company, shouldSchedule ? job.interviewDate : undefined);
+      if (!shouldSchedule || !job.interviewDate) continue;
+      const interviewTime = new Date(job.interviewDate).getTime();
+      if (Number.isNaN(interviewTime)) continue;
+
+      for (const hoursBefore of reminderHours) {
+        const delay = interviewTime - Date.now() - hoursBefore * 60 * 60 * 1000;
+        if (delay <= 0) continue;
+        const timer = window.setTimeout(() => {
+          setNotifications(previous => {
+            const title = `Interview in ${hoursBefore} hour${hoursBefore === 1 ? "" : "s"}: ${job.title}`;
+            if (previous.some(notification => notification.title === title && notification.jobId === job.id)) return previous;
+            return [{
+              id: `interview-${job.id}-${hoursBefore}-${Date.now()}`,
+              title,
+              desc: `Your interview with ${job.company} is coming up. Review the job details and prepare your application notes.`,
+              time: "Just now",
+              read: false,
+              jobId: job.id,
+              kind: "interview",
+              category: "system"
+            }, ...previous];
+          });
+        }, delay);
+        interviewReminderTimersRef.current.push(timer);
+      }
+    }
+
+    return () => {
+      interviewReminderTimersRef.current.forEach(timer => window.clearTimeout(timer));
+      interviewReminderTimersRef.current = [];
+    };
+  }, [jobs, prefInterviews, setNotifications]);
+
+  useEffect(() => {
+    closingReminderTimersRef.current.forEach(timer => window.clearTimeout(timer));
+    closingReminderTimersRef.current = [];
+
+    const reminderDays = [3, 2, 1] as const;
+    for (const job of jobs) {
+      const closingDate = parseJobCloseDate(job.closes);
+      const shouldSchedule = prefReminders && job.isSaved && !job.isApplied && Boolean(closingDate);
+      void scheduleClosingDateReminders(job.id, job.title, job.company, shouldSchedule ? closingDate ?? undefined : undefined);
+      if (!shouldSchedule || !closingDate) continue;
+
+      for (const daysBefore of reminderDays) {
+        const delay = closingDate.getTime() - Date.now() - daysBefore * 24 * 60 * 60 * 1000;
+        if (delay <= 0) continue;
+        const timer = window.setTimeout(() => {
+          setNotifications(previous => {
+            const title = `Job closes in ${daysBefore} day${daysBefore === 1 ? "" : "s"}: ${job.title}`;
+            if (previous.some(notification => notification.title === title && notification.jobId === job.id)) return previous;
+            return [{
+              id: `closing-${job.id}-${daysBefore}-${Date.now()}`,
+              title,
+              desc: `${job.title} at ${job.company} is still in your Saved for later list. Apply before the closing date.`,
+              time: "Just now",
+              read: false,
+              jobId: job.id,
+              kind: "reminder",
+              category: "system"
+            }, ...previous];
+          });
+        }, delay);
+        closingReminderTimersRef.current.push(timer);
+      }
+    }
+
+    return () => {
+      closingReminderTimersRef.current.forEach(timer => window.clearTimeout(timer));
+      closingReminderTimersRef.current = [];
+    };
+  }, [jobs, prefReminders, setNotifications]);
 
   const switchTab = (tab: AppTab) => {
     trackEvent("tab_switch", { from: activeTab, to: tab });
@@ -338,6 +462,75 @@ export default function App() {
     handleRemoveResumeFromWizard,
     handleFinalSubmitApp
   } = applyActions;
+
+  useEffect(() => {
+    if (jobsLoadState !== "success" || hasHydratedDurableStateRef.current) return;
+    let active = true;
+
+    const hydrateDurableState = async () => {
+      try {
+        const [storedJobState, storedResumeSelection] = await Promise.all([
+          readStoredValue(JOB_STATE_KEY),
+          readStoredValue(RESUME_SELECTION_KEY)
+        ]);
+        if (!active) return;
+
+        if (storedJobState) {
+          const persistedJobs = JSON.parse(storedJobState) as Array<Partial<Job> & { id?: string }>;
+          const persistedById = new Map(persistedJobs.filter((job): job is Partial<Job> & { id: string } => typeof job.id === "string").map(job => [job.id, job]));
+
+          setJobs(previous => previous.map(job => {
+            const persisted = persistedById.get(job.id);
+            if (!persisted) return job;
+            return {
+              ...job,
+              isSaved: Boolean(persisted.isSaved),
+              isApplied: Boolean(persisted.isApplied),
+              appliedStatus: persisted.appliedStatus,
+              appliedDate: persisted.appliedDate,
+              interviewTrackerStatus: persisted.interviewTrackerStatus,
+              interviewDate: persisted.interviewDate
+            };
+          }));
+        }
+
+        if (storedResumeSelection) {
+          const parsedResume = JSON.parse(storedResumeSelection) as { uploadedResume?: unknown };
+          setUploadedResume(typeof parsedResume.uploadedResume === "string" ? parsedResume.uploadedResume : null);
+        }
+      } catch {
+        // Keep current session data if persisted state is unavailable or corrupt.
+      } finally {
+        if (active) hasHydratedDurableStateRef.current = true;
+      }
+    };
+
+    void hydrateDurableState();
+    return () => {
+      active = false;
+    };
+  }, [jobsLoadState, setJobs, setUploadedResume]);
+
+  useEffect(() => {
+    if (!hasHydratedDurableStateRef.current) return;
+
+    const persistedJobs = jobs.map(job => ({
+      id: job.id,
+      isSaved: Boolean(job.isSaved),
+      isApplied: Boolean(job.isApplied),
+      appliedStatus: job.appliedStatus,
+      appliedDate: job.appliedDate,
+      interviewTrackerStatus: job.interviewTrackerStatus,
+      interviewDate: job.interviewDate
+    }));
+
+    void writeStoredValue(JOB_STATE_KEY, JSON.stringify(persistedJobs));
+  }, [jobs]);
+
+  useEffect(() => {
+    if (!hasHydratedDurableStateRef.current) return;
+    void writeStoredValue(RESUME_SELECTION_KEY, JSON.stringify({ uploadedResume }));
+  }, [uploadedResume]);
 
   const { state: jobActionState, actions: jobActionActions } = useJobActions({
     selectedJob,
@@ -590,6 +783,38 @@ export default function App() {
     await requestAppRating(triggerNotification);
   };
 
+  const onUpdateInterviewTracker = (
+    jobId: string,
+    interviewTrackerStatus: NonNullable<Job["interviewTrackerStatus"]>,
+    interviewDate?: string
+  ) => {
+    const patch = (job: Job): Job => job.id === jobId
+      ? {
+          ...job,
+          interviewTrackerStatus,
+          interviewDate: interviewTrackerStatus === "scheduled" ? interviewDate : undefined
+        }
+      : job;
+
+    setJobs(previous => previous.map(patch));
+    setSelectedJob(previous => previous ? patch(previous) : null);
+
+    const target = jobs.find(job => job.id === jobId);
+    if (target) {
+      const message = interviewTrackerStatus === "scheduled"
+        ? `Interview date saved for ${target.title} at ${target.company}.`
+        : `Interview tracker updated for ${target.title} at ${target.company}.`;
+      triggerNotification(message);
+    }
+
+    void scheduleInterviewReminders(
+      jobId,
+      target?.title ?? "Your SharpJob interview",
+      target?.company ?? "",
+      prefInterviews && interviewTrackerStatus === "scheduled" ? interviewDate : undefined
+    );
+  };
+
   useEffect(() => {
     if (!showSplash) return;
 
@@ -731,6 +956,7 @@ export default function App() {
                   onSelectPage={setSavedPage}
                   onExploreListings={() => switchTab("explore")}
                   onExportListing={exportListingToText}
+                  onUpdateInterviewTracker={onUpdateInterviewTracker}
                 />
               )}
 
@@ -785,7 +1011,6 @@ export default function App() {
                   autoAttachResume={autoAttachResume}
                   prefMatches={prefMatches}
                   prefInterviews={prefInterviews}
-                  prefViews={prefViews}
                   prefReminders={prefReminders}
                   prefDigest={prefDigest}
                   prefFrequency={prefFrequency}
@@ -793,11 +1018,8 @@ export default function App() {
                   prefQuietTo={prefQuietTo}
                   prefEmail={prefEmail}
                   prefPush={prefPush}
-                  settingWifiOnly={settingWifiOnly}
                   settingHaptics={settingHaptics}
-                  settingSound={settingSound}
                   settingLanguage={settingLanguage}
-                  cacheMB={cacheMB}
                   helpQuery={helpQuery}
                   helpOpenFaq={helpOpenFaq}
                   feedbackText={feedbackText}
@@ -827,7 +1049,6 @@ export default function App() {
                   setAutoAttachResume={setAutoAttachResume}
                   setPrefMatches={setPrefMatches}
                   setPrefInterviews={setPrefInterviews}
-                  setPrefViews={setPrefViews}
                   setPrefReminders={setPrefReminders}
                   setPrefDigest={setPrefDigest}
                   setPrefFrequency={setPrefFrequency}
@@ -835,11 +1056,8 @@ export default function App() {
                   setPrefQuietTo={setPrefQuietTo}
                   setPrefEmail={setPrefEmail}
                   setPrefPush={setPrefPush}
-                  setSettingWifiOnly={setSettingWifiOnly}
                   setSettingHaptics={setSettingHaptics}
-                  setSettingSound={setSettingSound}
                   setSettingLanguage={setSettingLanguage}
-                  setCacheMB={setCacheMB}
                   setHelpQuery={setHelpQuery}
                   setHelpOpenFaq={setHelpOpenFaq}
                   setFeedbackText={setFeedbackText}

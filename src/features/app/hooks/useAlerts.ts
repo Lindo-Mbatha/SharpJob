@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertNotification } from "../../alerts/types";
 import { AlertCategory } from "../../alerts/types";
 import { countUnreadAlerts } from "../../alerts/selectors";
 import { AlertsFilter } from "../types/domain";
+import { readStoredValue, writeStoredValue } from "./useProfileSettings";
+
+const ALERTS_KEY = "sharpjob.alerts.v1";
 
 const INITIAL_NOTIFICATIONS: AlertNotification[] = [
   { id: "1", title: "Welcome to SharpJob! 🎉", kind: "system", category: "general", desc: "Your account is live. Start with the Home feed for a curated shortlist, or jump into Explore to dial things in with Advanced Search. Pro tip: tap the bookmark on any card to build a save-list you can apply to later in a single tap.", time: "Just now", read: false },
@@ -20,6 +23,43 @@ export function useAlerts({
   const [notifications, setNotifications] = useState<AlertNotification[]>(INITIAL_NOTIFICATIONS);
   const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(null);
   const [alertsFilter, setAlertsFilter] = useState<AlertsFilter>("all");
+  const hasHydratedAlertsRef = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const hydrateAlerts = async () => {
+      try {
+        const storedAlerts = await readStoredValue(ALERTS_KEY);
+        if (!active || !storedAlerts) return;
+
+        const parsedAlerts = JSON.parse(storedAlerts) as unknown;
+        if (Array.isArray(parsedAlerts)) {
+          setNotifications(parsedAlerts.filter((alert): alert is AlertNotification =>
+            typeof alert?.id === "string" &&
+            typeof alert.title === "string" &&
+            typeof alert.desc === "string" &&
+            typeof alert.time === "string" &&
+            typeof alert.read === "boolean"
+          ));
+        }
+      } catch {
+        // Keep default alerts when the stored alert history is unavailable or corrupt.
+      } finally {
+        if (active) hasHydratedAlertsRef.current = true;
+      }
+    };
+
+    void hydrateAlerts();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedAlertsRef.current) return;
+    void writeStoredValue(ALERTS_KEY, JSON.stringify(notifications));
+  }, [notifications]);
 
   useEffect(() => {
     const profileTitle = `Profile Strength: ${profileStrengthLabel} 💪`;

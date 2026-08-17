@@ -16,6 +16,8 @@ export interface Job {
   isApplied?: boolean;
   appliedStatus?: "Submitted" | "Screening" | "Interviewing" | "Offer Given" | "Archived";
   appliedDate?: string;
+  interviewTrackerStatus?: "waiting_response" | "waiting_date" | "scheduled";
+  interviewDate?: string;
   applyUrl?: string;
 }
 

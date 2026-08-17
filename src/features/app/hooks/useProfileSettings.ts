@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { ProfileSubScreen } from "../../tabs/ProfileTabScreen";
-import { NotificationFrequency, NotificationSound } from "../types/domain";
+import { NotificationFrequency } from "../types/domain";
 
 const PROFILE_DETAILS_KEY = "sharpjob.profile.details.v1";
 const ACCESSIBILITY_SETTINGS_KEY = "sharpjob.profile.accessibility.v1";
+const NOTIFICATION_PREFERENCES_KEY = "sharpjob.profile.notifications.v1";
+const APP_SETTINGS_KEY = "sharpjob.profile.app-settings.v1";
 
 export type AccessibilityTextSize = "System" | "Small" | "Default" | "Large" | "Extra large";
 
@@ -30,6 +32,27 @@ type PersistedAccessibilitySettings = {
   accessibilityTextSize: AccessibilityTextSize;
 };
 
+type PersistedNotificationPreferences = {
+  prefMatches: boolean;
+  prefInterviews: boolean;
+  prefReminders: boolean;
+  prefDigest: boolean;
+  prefFrequency: NotificationFrequency;
+  prefQuietFrom: string;
+  prefQuietTo: string;
+  prefEmail: boolean;
+  prefPush: boolean;
+};
+
+type PersistedAppSettings = {
+  accentColor: string;
+  darkMode: boolean;
+  resumeVersions: Array<{ name: string; date: string; size: string; active: boolean }>;
+  autoAttachResume: boolean;
+  settingHaptics: boolean;
+  settingLanguage: string;
+};
+
 type PreferencesLike = {
   get: (options: { key: string }) => Promise<{ value: string | null }>;
   set: (options: { key: string; value: string }) => Promise<void>;
@@ -51,7 +74,7 @@ async function getPreferencesApi(): Promise<PreferencesLike | null> {
   }
 }
 
-async function readStoredProfile(key: string): Promise<string | null> {
+export async function readStoredValue(key: string): Promise<string | null> {
   const preferences = await getPreferencesApi();
   if (preferences) {
     const result = await preferences.get({ key });
@@ -65,7 +88,7 @@ async function readStoredProfile(key: string): Promise<string | null> {
   return null;
 }
 
-async function writeStoredProfile(key: string, value: string): Promise<void> {
+export async function writeStoredValue(key: string, value: string): Promise<void> {
   const preferences = await getPreferencesApi();
   if (preferences) {
     await preferences.set({ key, value });
@@ -100,20 +123,16 @@ export function useProfileSettings() {
 
   const [prefMatches, setPrefMatches] = useState<boolean>(true);
   const [prefInterviews, setPrefInterviews] = useState<boolean>(true);
-  const [prefViews, setPrefViews] = useState<boolean>(true);
   const [prefReminders, setPrefReminders] = useState<boolean>(true);
   const [prefDigest, setPrefDigest] = useState<boolean>(false);
   const [prefFrequency, setPrefFrequency] = useState<NotificationFrequency>("instant");
   const [prefQuietFrom, setPrefQuietFrom] = useState<string>("22:00");
   const [prefQuietTo, setPrefQuietTo] = useState<string>("07:00");
-  const [prefEmail, setPrefEmail] = useState<boolean>(true);
+  const [prefEmail, setPrefEmail] = useState<boolean>(false);
   const [prefPush, setPrefPush] = useState<boolean>(true);
 
-  const [settingWifiOnly, setSettingWifiOnly] = useState<boolean>(false);
   const [settingHaptics, setSettingHaptics] = useState<boolean>(true);
-  const [settingSound, setSettingSound] = useState<NotificationSound>("chime");
   const [settingLanguage, setSettingLanguage] = useState<string>("English");
-  const [cacheMB, setCacheMB] = useState<number>(42);
 
   const [helpQuery, setHelpQuery] = useState<string>("");
   const [helpOpenFaq, setHelpOpenFaq] = useState<string | null>(null);
@@ -132,9 +151,11 @@ export function useProfileSettings() {
 
     const hydrateProfileDetails = async () => {
       try {
-        const [storedProfile, storedAccessibility] = await Promise.all([
-          readStoredProfile(PROFILE_DETAILS_KEY),
-          readStoredProfile(ACCESSIBILITY_SETTINGS_KEY)
+        const [storedProfile, storedAccessibility, storedNotifications, storedAppSettings] = await Promise.all([
+          readStoredValue(PROFILE_DETAILS_KEY),
+          readStoredValue(ACCESSIBILITY_SETTINGS_KEY),
+          readStoredValue(NOTIFICATION_PREFERENCES_KEY),
+          readStoredValue(APP_SETTINGS_KEY)
         ]);
 
         if (!active) {
@@ -175,6 +196,33 @@ export function useProfileSettings() {
               : "Default"
           );
         }
+
+        if (storedNotifications) {
+          const parsedNotifications = JSON.parse(storedNotifications) as Partial<PersistedNotificationPreferences>;
+          const validFrequencies: NotificationFrequency[] = ["instant", "hourly", "daily"];
+
+          setPrefMatches(Boolean(parsedNotifications.prefMatches));
+          setPrefInterviews(Boolean(parsedNotifications.prefInterviews));
+          setPrefReminders(Boolean(parsedNotifications.prefReminders));
+          setPrefDigest(Boolean(parsedNotifications.prefDigest));
+          setPrefFrequency(validFrequencies.includes(parsedNotifications.prefFrequency as NotificationFrequency) ? parsedNotifications.prefFrequency as NotificationFrequency : "instant");
+          setPrefQuietFrom(typeof parsedNotifications.prefQuietFrom === "string" ? parsedNotifications.prefQuietFrom : "22:00");
+          setPrefQuietTo(typeof parsedNotifications.prefQuietTo === "string" ? parsedNotifications.prefQuietTo : "07:00");
+          setPrefEmail(Boolean(parsedNotifications.prefEmail));
+          setPrefPush(Boolean(parsedNotifications.prefPush));
+        }
+
+        if (storedAppSettings) {
+          const parsedSettings = JSON.parse(storedAppSettings) as Partial<PersistedAppSettings>;
+          setAccentColor(typeof parsedSettings.accentColor === "string" ? parsedSettings.accentColor : "blue");
+          setDarkMode(Boolean(parsedSettings.darkMode));
+          setResumeVersions(Array.isArray(parsedSettings.resumeVersions) ? parsedSettings.resumeVersions.filter((version): version is { name: string; date: string; size: string; active: boolean } =>
+            typeof version?.name === "string" && typeof version.date === "string" && typeof version.size === "string" && typeof version.active === "boolean"
+          ) : []);
+          setAutoAttachResume(Boolean(parsedSettings.autoAttachResume));
+          setSettingHaptics(typeof parsedSettings.settingHaptics === "boolean" ? parsedSettings.settingHaptics : true);
+          setSettingLanguage(typeof parsedSettings.settingLanguage === "string" ? parsedSettings.settingLanguage : "English");
+        }
       } catch (_error) {
         // Ignore corrupt/missing payloads and keep first-time empty defaults.
       } finally {
@@ -207,7 +255,7 @@ export function useProfileSettings() {
       profileSkills
     };
 
-    await writeStoredProfile(PROFILE_DETAILS_KEY, JSON.stringify(payload));
+    await writeStoredValue(PROFILE_DETAILS_KEY, JSON.stringify(payload));
   };
 
   useEffect(() => {
@@ -224,7 +272,7 @@ export function useProfileSettings() {
       accessibilityTextSize
     };
 
-    void writeStoredProfile(ACCESSIBILITY_SETTINGS_KEY, JSON.stringify(payload));
+    void writeStoredValue(ACCESSIBILITY_SETTINGS_KEY, JSON.stringify(payload));
   }, [
     accessibilityTalkBackHints,
     accessibilityHighContrast,
@@ -235,6 +283,39 @@ export function useProfileSettings() {
     accessibilityFocusIndicators,
     accessibilityTextSize
   ]);
+
+  useEffect(() => {
+    if (!hasHydratedAccessibilityRef.current) return;
+
+    const payload: PersistedNotificationPreferences = {
+      prefMatches,
+      prefInterviews,
+      prefReminders,
+      prefDigest,
+      prefFrequency,
+      prefQuietFrom,
+      prefQuietTo,
+      prefEmail,
+      prefPush
+    };
+
+    void writeStoredValue(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(payload));
+  }, [prefMatches, prefInterviews, prefReminders, prefDigest, prefFrequency, prefQuietFrom, prefQuietTo, prefEmail, prefPush]);
+
+  useEffect(() => {
+    if (!hasHydratedAccessibilityRef.current) return;
+
+    const payload: PersistedAppSettings = {
+      accentColor,
+      darkMode,
+      resumeVersions,
+      autoAttachResume,
+      settingHaptics,
+      settingLanguage
+    };
+
+    void writeStoredValue(APP_SETTINGS_KEY, JSON.stringify(payload));
+  }, [accentColor, darkMode, resumeVersions, autoAttachResume, settingHaptics, settingLanguage]);
 
   return {
     state: {
@@ -255,7 +336,6 @@ export function useProfileSettings() {
       autoAttachResume,
       prefMatches,
       prefInterviews,
-      prefViews,
       prefReminders,
       prefDigest,
       prefFrequency,
@@ -263,11 +343,8 @@ export function useProfileSettings() {
       prefQuietTo,
       prefEmail,
       prefPush,
-      settingWifiOnly,
       settingHaptics,
-      settingSound,
       settingLanguage,
-      cacheMB,
       helpQuery,
       helpOpenFaq,
       feedbackText,
@@ -298,7 +375,6 @@ export function useProfileSettings() {
       setAutoAttachResume,
       setPrefMatches,
       setPrefInterviews,
-      setPrefViews,
       setPrefReminders,
       setPrefDigest,
       setPrefFrequency,
@@ -306,11 +382,8 @@ export function useProfileSettings() {
       setPrefQuietTo,
       setPrefEmail,
       setPrefPush,
-      setSettingWifiOnly,
       setSettingHaptics,
-      setSettingSound,
       setSettingLanguage,
-      setCacheMB,
       setHelpQuery,
       setHelpOpenFaq,
       setFeedbackText,

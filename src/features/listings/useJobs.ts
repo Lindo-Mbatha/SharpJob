@@ -87,7 +87,24 @@ export function useJobs() {
       }
 
       const mapped = (rows ?? []).map(row => mapRow(row));
-      setJobs(mapped);
+      setJobs(previousJobs => {
+        const localStateByJobId = new Map(previousJobs.map(job => [job.id, job]));
+
+        return mapped.map(job => {
+          const localJob = localStateByJobId.get(job.id);
+          if (!localJob) return job;
+
+          return {
+            ...job,
+            isSaved: localJob.isSaved,
+            isApplied: localJob.isApplied,
+            appliedStatus: localJob.appliedStatus,
+            appliedDate: localJob.appliedDate,
+            interviewTrackerStatus: localJob.interviewTrackerStatus,
+            interviewDate: localJob.interviewDate
+          };
+        });
+      });
       setLoadState("success");
     };
 

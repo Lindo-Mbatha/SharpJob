@@ -3,7 +3,6 @@ import {
   Bell,
   BellRing,
   Check,
-  CheckCircle,
   ChevronDown,
   ChevronRight,
   Clock,
@@ -26,12 +25,12 @@ import {
   Upload,
   UserPen,
   Volume2,
-  Wifi,
   X,
   Zap,
   ArrowLeft
 } from "lucide-react";
-import { NotificationFrequency, NotificationSound } from "../app/types/domain";
+import { NotificationFrequency } from "../app/types/domain";
+import { APP_VERSION } from "../../version";
 
 type IconCmp = React.ComponentType<{ className?: string }>;
 type AccessibilityTextSize = "System" | "Small" | "Default" | "Large" | "Extra large";
@@ -160,7 +159,6 @@ export function ProfileTabScreen({
   autoAttachResume,
   prefMatches,
   prefInterviews,
-  prefViews,
   prefReminders,
   prefDigest,
   prefFrequency,
@@ -168,11 +166,8 @@ export function ProfileTabScreen({
   prefQuietTo,
   prefEmail,
   prefPush,
-  settingWifiOnly,
   settingHaptics,
-  settingSound,
   settingLanguage,
-  cacheMB,
   helpQuery,
   helpOpenFaq,
   feedbackText,
@@ -202,7 +197,6 @@ export function ProfileTabScreen({
   setAutoAttachResume,
   setPrefMatches,
   setPrefInterviews,
-  setPrefViews,
   setPrefReminders,
   setPrefDigest,
   setPrefFrequency,
@@ -210,11 +204,8 @@ export function ProfileTabScreen({
   setPrefQuietTo,
   setPrefEmail,
   setPrefPush,
-  setSettingWifiOnly,
   setSettingHaptics,
-  setSettingSound,
   setSettingLanguage,
-  setCacheMB,
   setHelpQuery,
   setHelpOpenFaq,
   setFeedbackText,
@@ -261,7 +252,6 @@ export function ProfileTabScreen({
   autoAttachResume: boolean;
   prefMatches: boolean;
   prefInterviews: boolean;
-  prefViews: boolean;
   prefReminders: boolean;
   prefDigest: boolean;
   prefFrequency: NotificationFrequency;
@@ -269,11 +259,8 @@ export function ProfileTabScreen({
   prefQuietTo: string;
   prefEmail: boolean;
   prefPush: boolean;
-  settingWifiOnly: boolean;
   settingHaptics: boolean;
-  settingSound: NotificationSound;
   settingLanguage: string;
-  cacheMB: number;
   helpQuery: string;
   helpOpenFaq: string | null;
   feedbackText: string;
@@ -303,7 +290,6 @@ export function ProfileTabScreen({
   setAutoAttachResume: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefMatches: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefInterviews: React.Dispatch<React.SetStateAction<boolean>>;
-  setPrefViews: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefReminders: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefDigest: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefFrequency: React.Dispatch<React.SetStateAction<NotificationFrequency>>;
@@ -311,11 +297,8 @@ export function ProfileTabScreen({
   setPrefQuietTo: React.Dispatch<React.SetStateAction<string>>;
   setPrefEmail: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefPush: React.Dispatch<React.SetStateAction<boolean>>;
-  setSettingWifiOnly: React.Dispatch<React.SetStateAction<boolean>>;
   setSettingHaptics: React.Dispatch<React.SetStateAction<boolean>>;
-  setSettingSound: React.Dispatch<React.SetStateAction<NotificationSound>>;
   setSettingLanguage: React.Dispatch<React.SetStateAction<string>>;
-  setCacheMB: React.Dispatch<React.SetStateAction<number>>;
   setHelpQuery: React.Dispatch<React.SetStateAction<string>>;
   setHelpOpenFaq: React.Dispatch<React.SetStateAction<string | null>>;
   setFeedbackText: React.Dispatch<React.SetStateAction<string>>;
@@ -485,7 +468,7 @@ export function ProfileTabScreen({
         </div>
 
         <p className="text-center text-[10px] text-slate-400 pt-1 pb-2">
-          SharpJob v{__APP_VERSION__} - by Player99 Inc
+          SharpJob v{APP_VERSION} - by Player99 Inc
         </p>
 
         <div className={`mx-1 mb-4 p-3 rounded-xl border text-[10px] leading-relaxed space-y-2 ${darkMode ? "bg-slate-900/60 border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"}`}>
@@ -614,6 +597,9 @@ export function ProfileTabScreen({
         <div className={`absolute inset-0 z-40 flex flex-col animate-slide-up ${darkMode ? "bg-slate-950" : "bg-white"}`}>
           <ReaderTopBar title="Resume & CV" onBackLabel="Profile" onBack={() => setProfileSubScreen(null)} dark={darkMode} accentText={activeAccentText} />
           <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-5">
+            <div className={`rounded-xl border p-3 text-[11px] leading-relaxed ${darkMode ? "bg-amber-950/30 border-amber-900/60 text-amber-200" : "bg-amber-50 border-amber-200 text-amber-900"}`}>
+              Resume uploads and document storage are not fully available yet. This feature will be completed in a future update.
+            </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Active resume</label>
               {uploadedResume ? (
@@ -683,11 +669,10 @@ export function ProfileTabScreen({
             <p className="text-[11px] text-slate-500 leading-relaxed -mt-1">Choose what pings you and when. Changes save instantly.</p>
 
             {[
-              { icon: Sparkles, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "New matches", desc: "Roles that fit your skills & salary band.", on: prefMatches, set: setPrefMatches },
-              { icon: BellRing, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Interview updates", desc: "Invites, reschedules, outcomes.", on: prefInterviews, set: setPrefInterviews },
-              { icon: CheckCircle, wrap: "bg-amber-50 text-amber-600 border-amber-100", title: "Application views", desc: "When a recruiter opens your CV.", on: prefViews, set: setPrefViews },
-              { icon: Clock, wrap: "bg-rose-50 text-rose-600 border-rose-100", title: "Closing-date reminders", desc: "48h and 4h before a saved role closes.", on: prefReminders, set: setPrefReminders },
-              { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Weekly digest", desc: "One email, Monday 08:00, top matches.", on: prefDigest, set: setPrefDigest }
+              { icon: Sparkles, wrap: "bg-indigo-50 text-indigo-600 border-indigo-100", title: "New matches", desc: "Add your preferred job title in Edit Profile > Headline to receive matching new-role alerts.", on: prefMatches, set: setPrefMatches },
+              { icon: BellRing, wrap: "bg-emerald-50 text-emerald-600 border-emerald-100", title: "Interview updates", desc: "Uses the Interview Tracker in Saved Jobs and sends reminders after you enter an interview date.", on: prefInterviews, set: setPrefInterviews },
+              { icon: Clock, wrap: "bg-rose-50 text-rose-600 border-rose-100", title: "Closing-date reminders", desc: "Uses Saved for later jobs to remind you 3, 2, and 1 day before they close.", on: prefReminders, set: setPrefReminders },
+              { icon: Mail, wrap: "bg-sky-50 text-sky-600 border-sky-100", title: "Weekly digest", desc: "Not available yet. Weekly email summaries will arrive in a future update.", on: prefDigest, set: setPrefDigest }
             ].map(row => {
               const RowIcon = row.icon;
               return (
@@ -744,7 +729,7 @@ export function ProfileTabScreen({
                 </button>
                 <button onClick={() => setPrefEmail(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
                   <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Mail className="h-4 w-4" /></div>
-                  <div className="flex-1"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Email</p><p className="text-[11px] text-slate-500 truncate">{applicantEmail}</p></div>
+                  <div className="flex-1"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Email</p><p className="text-[11px] text-slate-500">Not available yet. Email alerts will arrive in a future update.</p></div>
                   <Toggle label="Email notifications" on={prefEmail} onChange={() => setPrefEmail(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
                 </button>
               </div>
@@ -793,11 +778,6 @@ export function ProfileTabScreen({
 
             <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
-              <button onClick={() => setSettingWifiOnly(v => !v)} aria-label="Toggle Wi-Fi only" className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
-              <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Wifi className="h-4 w-4" /></div>
-              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Wi-Fi only</p><p className="text-[11px] text-slate-500">Pause media & large syncs on mobile data.</p></div>
-              <Toggle label="Wi-Fi only" on={settingWifiOnly} onChange={() => setSettingWifiOnly(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
-            </button>
               <button onClick={() => setSettingHaptics(v => !v)} aria-label="Toggle haptic feedback" className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><Zap className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Haptic feedback</p><p className="text-[11px] text-slate-500">Subtle taps on toggles & confirms.</p></div>
@@ -806,23 +786,14 @@ export function ProfileTabScreen({
 
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-rose-50 text-rose-600 border-rose-100 flex items-center justify-center shrink-0"><Volume2 className="h-4 w-4" /></div>
-              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Notification sound</p></div>
-              <select value={settingSound} onChange={e => setSettingSound(e.target.value as NotificationSound)} className={`text-[11px] font-bold px-2 py-1 rounded-lg border focus:outline-none capitalize ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}>
-                <option value="chime">Chime</option><option value="ping">Ping</option><option value="none">None</option>
-              </select>
+              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Notification sound</p><p className="text-[11px] text-slate-500">Custom notification sounds are not available yet and will arrive in a future update.</p></div>
             </div>
 
             <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
-            <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
-              <div className="w-9 h-9 rounded-lg border bg-slate-100 text-slate-600 border-slate-200 flex items-center justify-center shrink-0"><FileText className="h-4 w-4" /></div>
-              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Cached data</p><p className="text-[11px] text-slate-500">{cacheMB} MB - listings, avatars, icons.</p></div>
-              <button onClick={() => { setCacheMB(0); triggerNotification("Cache cleared. Listings will refresh on next open."); }} aria-label="Clear cached data" className="text-[10px] font-bold text-red-500 px-2 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100">Clear</button>
-            </div>
-
             <div className={`p-3 rounded-xl border flex items-center justify-between ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
               <span className="text-[11px] text-slate-500 font-semibold">App version</span>
-              <span className="text-[11px] text-slate-400 font-bold">1.2.0 (build 248)</span>
+              <span className="text-[11px] text-slate-400 font-bold">v{APP_VERSION}</span>
             </div>
 
             <button onClick={() => { if (confirm("Sign out of SharpJob on this device?")) { triggerNotification("Signed out. (Demo only - session restored on reload.)"); setProfileSubScreen(null); } }} aria-label="Sign out of SharpJob" className="w-full flex items-center justify-center gap-1.5 p-3 rounded-xl border border-red-200 bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors">

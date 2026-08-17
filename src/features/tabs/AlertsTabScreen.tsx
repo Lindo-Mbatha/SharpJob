@@ -356,7 +356,7 @@ export function AlertsTabScreen({
                 {selectedNotif.kind === "match" && "We match you to roles using your saved skills, target salary and location preferences. Tune any of those from the Profile tab to refine future alerts."}
                 {selectedNotif.kind === "interview" && "Interview confirmations are mirrored to your primary email. If you don't see the calendar invite within 5 minutes, check spam or tap 'Resend' from the email itself."}
                 {selectedNotif.kind === "viewed" && "A 'viewed' event means a human recruiter opened your application inside their ATS. Response rates are highest within the first 72 hours of a view."}
-                {selectedNotif.kind === "reminder" && "Closing-date reminders fire 48 hours and 4 hours before a saved role stops accepting applications."}
+                {selectedNotif.kind === "reminder" && "Closing-date reminders are scheduled for Saved for later jobs 3, 2, and 1 day before each role closes."}
                 {selectedNotif.kind === "profile" && "Profile Strength is calculated from completed fields, verified skills and uploaded assets. A 100% profile gets prioritised in recruiter search results."}
                 {selectedNotif.kind === "system" && "Need help? Our support team replies within one business day from the Profile tab → Help & Feedback."}
                 {!selectedNotif.kind && "This is a general product update from the SharpJob team."}
