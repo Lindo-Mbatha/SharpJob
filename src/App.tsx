@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import sharpJobLogo from "./assets/sharpjobreallogo.png";
 import splashBackground from "./assets/backgroundblue.jpg";
+import { WifiOff } from "lucide-react";
 import { LISTINGS_PER_PAGE } from "./features/listings/constants";
 import { useJobs } from "./features/listings/useJobs";
 import { Job, PreviousSavedListing } from "./features/listings/types";
@@ -15,6 +16,10 @@ import { ApplyWizardSheet } from "./features/tabs/ApplyWizardSheet";
 import { AdvancedSearchSheet } from "./features/tabs/AdvancedSearchSheet";
 import { JobDetailsDrawer } from "./features/tabs/JobDetailsDrawer";
 import { TopStatusToastOverlay } from "./features/tabs/TopStatusToastOverlay";
+import { JobListSkeleton } from "./features/listings/components/JobListSkeleton";
+import { PullToRefreshIndicator } from "./features/tabs/PullToRefreshIndicator";
+import { OfflineBanner } from "./features/tabs/OfflineBanner";
+import { usePullToRefresh } from "./features/app/hooks/usePullToRefresh";
 import { BottomNavigationBar } from "./features/tabs/BottomNavigationBar";
 import { PhoneShellFrame } from "./features/tabs/PhoneShellFrame";
 import { useAlerts } from "./features/app/hooks/useAlerts";
@@ -23,6 +28,8 @@ import { useJobActions } from "./features/app/hooks/useJobActions";
 import { useDeviceStatus } from "./features/app/hooks/useDeviceStatus";
 import { useExploreFilters } from "./features/app/hooks/useExploreFilters";
 import { readStoredValue, useProfileSettings, writeStoredValue } from "./features/app/hooks/useProfileSettings";
+import { useOnboarding } from "./features/app/hooks/useOnboarding";
+import { OnboardingWalkthrough } from "./features/app/onboarding/OnboardingWalkthrough";
 import { AppTab, ApplyOutboundMode } from "./features/app/types/domain";
 import { trackEvent, trackScreenView } from "./features/app/monitoring/telemetry";
 import { requestAppRating } from "./features/app/monitoring/rateApp";
@@ -124,6 +131,7 @@ export default function App() {
 
   const {
     accentColor,
+    themeMode,
     darkMode,
     applicantName,
     applicantEmail,
@@ -152,6 +160,8 @@ export default function App() {
     helpQuery,
     helpOpenFaq,
     feedbackText,
+    feedbackCategory,
+    feedbackRating,
     accessibilityTalkBackHints,
     accessibilityHighContrast,
     accessibilityReduceMotion,
@@ -164,7 +174,7 @@ export default function App() {
 
   const {
     setAccentColor,
-    setDarkMode,
+    setThemeMode,
     setApplicantName,
     setApplicantEmail,
     setApplicantPhone,
@@ -192,6 +202,8 @@ export default function App() {
     setHelpQuery,
     setHelpOpenFaq,
     setFeedbackText,
+    setFeedbackCategory,
+    setFeedbackRating,
     setAccessibilityTalkBackHints,
     setAccessibilityHighContrast,
     setAccessibilityReduceMotion,
@@ -229,8 +241,15 @@ export default function App() {
   const [showSplash, setShowSplash] = useState<boolean>(shouldShowInitialSplash);
   const [isSplashFading, setIsSplashFading] = useState<boolean>(false);
 
+  const { isOnboardingActive, completeOnboarding, startOnboarding } = useOnboarding();
+  const tabButtonRefsRef = useRef<Partial<Record<AppTab, HTMLButtonElement | null>>>({});
+  const registerTabRef = (tab: AppTab, el: HTMLButtonElement | null) => {
+    tabButtonRefsRef.current[tab] = el;
+  };
+  const getTabRef = (tab: AppTab) => tabButtonRefsRef.current[tab] ?? null;
+
   // Dynamic lists — loaded from Supabase
-  const { jobs, setJobs, loadState: jobsLoadState, error: jobsError } = useJobs();
+  const { jobs, setJobs, loadState: jobsLoadState, error: jobsError, isRefreshing: jobsRefreshing, refetch: refetchJobs, retry: retryJobsLoad } = useJobs();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const processedJobsSnapshotRef = useRef<string | null>(null);
   const interviewReminderTimersRef = useRef<number[]>([]);
@@ -246,6 +265,18 @@ export default function App() {
   const scrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handlePullToRefresh = async () => {
+    void triggerHapticFeedback(settingHaptics);
+    await refetchJobs();
+  };
+
+  const pullToRefresh = usePullToRefresh({
+    containerRef: scrollContainerRef,
+    enabled: jobsLoadState === "success" && (activeTab === "home" || activeTab === "explore"),
+    isRefreshing: jobsRefreshing,
+    onRefresh: handlePullToRefresh
+  });
 
   // Set selected accent styles
   const activeAccent = ACCENTS[accentColor] || ACCENTS.blue;
@@ -567,7 +598,8 @@ export default function App() {
     advSalaryMin,
     advDate,
     advSkills,
-    advSkillInput
+    advSkillInput,
+    recentSearches
   } = exploreState;
 
   const {
@@ -583,6 +615,9 @@ export default function App() {
     setAdvDate,
     setAdvSkills,
     setAdvSkillInput,
+    addRecentSearch,
+    removeRecentSearch,
+    clearRecentSearches,
     openAdvancedSearch,
     closeAdvancedSearch,
     applyAdvancedSearch,
@@ -860,27 +895,47 @@ export default function App() {
               onDismissToast={dismissToast}
             />
 
+            <OfflineBanner darkMode={darkMode} visible={!networkOnline} />
+
+            <PullToRefreshIndicator
+              isMobileView={isMobileView}
+              darkMode={darkMode}
+              activeAccentPrimary={activeAccent.primary}
+              pullDistance={pullToRefresh.pullDistance}
+              isPulling={pullToRefresh.isPulling}
+              isRefreshing={jobsRefreshing}
+            />
+
             {/* 3. APP SCREEN BODY (DYNAMIC BY TAB) */}
-            <div ref={scrollContainerRef} className={`flex-1 overflow-y-auto no-scrollbar flex flex-col ${isMobileView ? "pb-20" : "pb-16"} relative`}>
+            <div
+              ref={scrollContainerRef}
+              className={`flex-1 overflow-y-auto no-scrollbar flex flex-col ${isMobileView ? "pb-20" : "pb-16"} relative`}
+              style={{
+                transform: pullToRefresh.pullDistance > 0 ? `translateY(${pullToRefresh.pullDistance}px)` : undefined,
+                transition: pullToRefresh.isPulling ? "none" : "transform 0.25s ease"
+              }}
+            >
 
               {/* JOBS LOADING / ERROR STATE */}
               {jobsLoadState === "loading" && (
-                <div className="flex-1 flex items-center justify-center py-24">
-                  <div className="text-center space-y-2">
-                    <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto ${darkMode ? "border-slate-400" : "border-slate-400"}`} />
-                    <p className={`text-xs font-semibold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Loading jobs…</p>
-                  </div>
-                </div>
+                <JobListSkeleton darkMode={darkMode} count={4} />
               )}
 
               {jobsLoadState === "error" && (
                 <div className="flex-1 flex items-center justify-center py-24">
                   <div className="text-center space-y-2 px-8">
+                    <WifiOff className="h-10 w-10 text-slate-500 mx-auto mb-1 opacity-40" />
                     <p className={`text-sm font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Could not load jobs</p>
                     <p className={`text-xs ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Check your connection and try again.</p>
                     {import.meta.env.DEV && jobsError && (
                       <p className="text-[10px] text-red-400 mt-1 break-words max-w-xs mx-auto font-mono">{jobsError}</p>
                     )}
+                    <button
+                      onClick={() => void retryJobsLoad()}
+                      className={`mt-3 text-xs font-semibold px-4 py-1.5 rounded-lg border ${darkMode ? "border-slate-800 text-slate-300" : "border-slate-200 text-slate-600"}`}
+                    >
+                      Try again
+                    </button>
                   </div>
                 </div>
               )}
@@ -904,6 +959,7 @@ export default function App() {
                   onPreviousPage={() => setHomePage(prev => Math.max(1, prev - 1))}
                   onNextPage={() => setHomePage(prev => Math.min(homePagination.totalPages, prev + 1))}
                   onSelectPage={setHomePage}
+                  onRefresh={() => void handlePullToRefresh()}
                 />
               )}
 
@@ -922,6 +978,7 @@ export default function App() {
                   exploreJobsPage={explorePagination.pageItems}
                   safeExplorePage={explorePagination.safePage}
                   exploreTotalPages={explorePagination.totalPages}
+                  recentSearches={recentSearches}
                   setExploreQuery={setExploreQuery}
                   setExploreCategory={setExploreCategory}
                   setExploreType={setExploreType}
@@ -932,6 +989,10 @@ export default function App() {
                   onNextPage={() => setExplorePage(prev => Math.min(explorePagination.totalPages, prev + 1))}
                   onSelectPage={setExplorePage}
                   onResetFilters={resetFilters}
+                  onCommitSearch={addRecentSearch}
+                  onApplyRecentSearch={term => { setExploreQuery(term); addRecentSearch(term); }}
+                  onRemoveRecentSearch={removeRecentSearch}
+                  onClearRecentSearches={clearRecentSearches}
                 />
               )}
 
@@ -984,6 +1045,7 @@ export default function App() {
               {activeTab === "profile" && (
                 <ProfileTabScreen
                   darkMode={darkMode}
+                  themeMode={themeMode}
                   activeAccentText={activeAccent.text}
                   activeAccentPrimary={activeAccent.primary}
                   activeAccentBorderActive={activeAccent.borderActive}
@@ -1023,6 +1085,8 @@ export default function App() {
                   helpQuery={helpQuery}
                   helpOpenFaq={helpOpenFaq}
                   feedbackText={feedbackText}
+                  feedbackCategory={feedbackCategory}
+                  feedbackRating={feedbackRating}
                   accessibilityTalkBackHints={accessibilityTalkBackHints}
                   accessibilityHighContrast={accessibilityHighContrast}
                   accessibilityReduceMotion={accessibilityReduceMotion}
@@ -1031,7 +1095,7 @@ export default function App() {
                   accessibilityReduceTransparency={accessibilityReduceTransparency}
                   accessibilityFocusIndicators={accessibilityFocusIndicators}
                   accessibilityTextSize={accessibilityTextSize}
-                  setDarkMode={setDarkMode}
+                  setThemeMode={setThemeMode}
                   setAccentColor={setAccentColor}
                   setProfileSubScreen={setProfileSubScreen}
                   setApplicantName={setApplicantName}
@@ -1061,6 +1125,8 @@ export default function App() {
                   setHelpQuery={setHelpQuery}
                   setHelpOpenFaq={setHelpOpenFaq}
                   setFeedbackText={setFeedbackText}
+                  setFeedbackCategory={setFeedbackCategory}
+                  setFeedbackRating={setFeedbackRating}
                   setAccessibilityTalkBackHints={setAccessibilityTalkBackHints}
                   setAccessibilityHighContrast={setAccessibilityHighContrast}
                   setAccessibilityReduceMotion={setAccessibilityReduceMotion}
@@ -1074,6 +1140,7 @@ export default function App() {
                   onProfileSaved={onProfileSavedTracked}
                   onHeadlineSaved={onHeadlineSaved}
                   onRateApp={onRateApp}
+                  onReplayOnboarding={startOnboarding}
                   triggerNotification={triggerNotification}
                 />
               )}
@@ -1175,7 +1242,22 @@ export default function App() {
               savedVisibleCount={savedVisibleCount}
               unreadAlertsCount={unreadAlertsCount}
               onSelectTab={switchTab}
+              registerTabRef={registerTabRef}
             />
+
+            {!showSplash && jobsLoadState === "success" && (
+              <OnboardingWalkthrough
+                active={isOnboardingActive}
+                darkMode={darkMode}
+                isMobileView={isMobileView}
+                activeAccentPrimary={activeAccent.primary}
+                hapticsEnabled={settingHaptics}
+                activeTab={activeTab}
+                onSelectTab={switchTab}
+                getTabRef={getTabRef}
+                onFinish={completeOnboarding}
+              />
+            )}
 
             {showSplash && (
               <div

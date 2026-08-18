@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../utils/supabaseClient";
 import { Job } from "./types";
 
@@ -67,57 +67,79 @@ export function useJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loadState, setLoadState] = useState<JobsLoadState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const cancelledRef = useRef(false);
+
+  const applyFetchedRows = useCallback((rows: Record<string, unknown>[]) => {
+    const mapped = rows.map(row => mapRow(row));
+    setJobs(previousJobs => {
+      const localStateByJobId = new Map(previousJobs.map(job => [job.id, job]));
+
+      return mapped.map(job => {
+        const localJob = localStateByJobId.get(job.id);
+        if (!localJob) return job;
+
+        return {
+          ...job,
+          isSaved: localJob.isSaved,
+          isApplied: localJob.isApplied,
+          appliedStatus: localJob.appliedStatus,
+          appliedDate: localJob.appliedDate,
+          interviewTrackerStatus: localJob.interviewTrackerStatus,
+          interviewDate: localJob.interviewDate
+        };
+      });
+    });
+  }, []);
+
+  // Initial load: drives the full-screen loading/error states.
+  const loadJobs = useCallback(async () => {
+    setLoadState("loading");
+    setError(null);
+
+    const { rows, error: sbError } = await fetchAllJobs();
+    if (cancelledRef.current) return;
+
+    if (sbError) {
+      console.error('[SharpJob] useJobs fetch error:', sbError.message, sbError);
+      setError(sbError.message);
+      setLoadState("error");
+      return;
+    }
+
+    applyFetchedRows(rows ?? []);
+    setLoadState("success");
+  }, [applyFetchedRows]);
+
+  // Background/manual refresh: never blanks already-loaded content.
+  const refetch = useCallback(async () => {
+    setIsRefreshing(true);
+
+    const { rows, error: sbError } = await fetchAllJobs();
+    if (cancelledRef.current) return;
+
+    if (sbError) {
+      console.error('[SharpJob] useJobs refetch error:', sbError.message, sbError);
+    } else {
+      applyFetchedRows(rows ?? []);
+    }
+
+    setIsRefreshing(false);
+  }, [applyFetchedRows]);
 
   useEffect(() => {
-    let cancelled = false;
+    cancelledRef.current = false;
+    void loadJobs();
 
-    const fetchJobs = async () => {
-      setLoadState("loading");
-      setError(null);
-
-      const { rows, error: sbError } = await fetchAllJobs();
-
-      if (cancelled) return;
-
-      if (sbError) {
-        console.error('[SharpJob] useJobs fetch error:', sbError.message, sbError);
-        setError(sbError.message);
-        setLoadState("error");
-        return;
-      }
-
-      const mapped = (rows ?? []).map(row => mapRow(row));
-      setJobs(previousJobs => {
-        const localStateByJobId = new Map(previousJobs.map(job => [job.id, job]));
-
-        return mapped.map(job => {
-          const localJob = localStateByJobId.get(job.id);
-          if (!localJob) return job;
-
-          return {
-            ...job,
-            isSaved: localJob.isSaved,
-            isApplied: localJob.isApplied,
-            appliedStatus: localJob.appliedStatus,
-            appliedDate: localJob.appliedDate,
-            interviewTrackerStatus: localJob.interviewTrackerStatus,
-            interviewDate: localJob.interviewDate
-          };
-        });
-      });
-      setLoadState("success");
-    };
-
-    void fetchJobs();
     const refreshTimer = window.setInterval(() => {
-      void fetchJobs();
+      void refetch();
     }, 5 * 60 * 1000);
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
       window.clearInterval(refreshTimer);
     };
-  }, []);
+  }, [loadJobs, refetch]);
 
-  return { jobs, setJobs, loadState, error };
+  return { jobs, setJobs, loadState, error, isRefreshing, refetch, retry: loadJobs };
 }

@@ -10,7 +10,8 @@ export function BottomNavigationBar({
   activeAccentPrimary,
   savedVisibleCount,
   unreadAlertsCount,
-  onSelectTab
+  onSelectTab,
+  registerTabRef
 }: {
   isMobileView: boolean;
   darkMode: boolean;
@@ -20,6 +21,7 @@ export function BottomNavigationBar({
   savedVisibleCount: number;
   unreadAlertsCount: number;
   onSelectTab: (tab: AppTab) => void;
+  registerTabRef?: (tab: AppTab, el: HTMLButtonElement | null) => void;
 }) {
   const items: Array<{
     key: AppTab;
@@ -45,6 +47,7 @@ export function BottomNavigationBar({
       {items.map(({ key, label, icon: Icon }) => (
         <button
           key={key}
+          ref={el => registerTabRef?.(key, el)}
           onClick={() => onSelectTab(key)}
           className={`flex flex-col items-center justify-center gap-1 ${isMobileView ? "w-16 h-16" : "w-12 h-12"} transition-all${
             key === "saved" || key === "alerts" ? " relative" : ""

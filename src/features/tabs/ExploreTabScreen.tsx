@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Clock, Search, SlidersHorizontal, X } from "lucide-react";
 import { JobCard } from "../listings/components/JobCard";
 import { PaginationControls } from "../listings/components/PaginationControls";
 import { Job } from "../listings/types";
@@ -16,6 +16,7 @@ export function ExploreTabScreen({
   exploreJobsPage,
   safeExplorePage,
   exploreTotalPages,
+  recentSearches,
   setExploreQuery,
   setExploreCategory,
   setExploreType,
@@ -25,7 +26,11 @@ export function ExploreTabScreen({
   onPreviousPage,
   onNextPage,
   onSelectPage,
-  onResetFilters
+  onResetFilters,
+  onCommitSearch,
+  onApplyRecentSearch,
+  onRemoveRecentSearch,
+  onClearRecentSearches
 }: {
   darkMode: boolean;
   activeAccentText: string;
@@ -38,6 +43,7 @@ export function ExploreTabScreen({
   exploreJobsPage: Job[];
   safeExplorePage: number;
   exploreTotalPages: number;
+  recentSearches: string[];
   setExploreQuery: (value: string) => void;
   setExploreCategory: (value: string) => void;
   setExploreType: (value: string) => void;
@@ -48,6 +54,10 @@ export function ExploreTabScreen({
   onNextPage: () => void;
   onSelectPage: (page: number) => void;
   onResetFilters: () => void;
+  onCommitSearch: (query: string) => void;
+  onApplyRecentSearch: (query: string) => void;
+  onRemoveRecentSearch: (query: string) => void;
+  onClearRecentSearches: () => void;
 }) {
   const DRAG_ACTIVATION_THRESHOLD = 8;
 
@@ -148,6 +158,13 @@ export function ExploreTabScreen({
               type="text"
               value={exploreQuery}
               onChange={e => setExploreQuery(e.target.value)}
+              onBlur={e => onCommitSearch(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  onCommitSearch(exploreQuery);
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
               placeholder="Search title, company, or location..."
               className={`w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 ${
                 darkMode
@@ -177,6 +194,49 @@ export function ExploreTabScreen({
             <SlidersHorizontal className="h-4.5 w-4.5" />
           </button>
         </div>
+
+        {exploreQuery.trim() === "" && recentSearches.length > 0 && (
+          <div
+            className="flex items-center gap-1.5 overflow-x-scroll overflow-y-hidden no-scrollbar py-0.5 cursor-grab active:cursor-grabbing"
+            onWheel={onHorizontalWheel}
+            onPointerDown={onHorizontalPointerDown}
+            onPointerMove={onHorizontalPointerMove}
+            onPointerUp={onHorizontalPointerEnd}
+            onPointerCancel={onHorizontalPointerEnd}
+            onClickCapture={onHorizontalClickCapture}
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
+          >
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mr-1 shrink-0">Recent:</span>
+            {recentSearches.map(term => (
+              <span
+                key={term}
+                className={`flex items-center gap-1 pl-3 pr-1.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap shrink-0 border transition-all ${
+                  darkMode
+                    ? "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
+                    : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <button onClick={() => onApplyRecentSearch(term)} aria-label={`Search for "${term}"`} className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 opacity-60 shrink-0" />
+                  {term}
+                </button>
+                <button
+                  onClick={() => onRemoveRecentSearch(term)}
+                  aria-label={`Remove "${term}" from recent searches`}
+                  className="touch-target opacity-50 hover:opacity-100 hover:text-red-500 shrink-0"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={onClearRecentSearches}
+              className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline shrink-0 ml-1"
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
         <div
           className="flex items-center gap-1.5 overflow-x-scroll overflow-y-hidden no-scrollbar py-1 cursor-grab active:cursor-grabbing"

@@ -7,3 +7,7 @@ export type AlertsFilter = "all" | "general" | "system" | "headline" | "unread";
 export type NotificationFrequency = "instant" | "hourly" | "daily";
 
 export type NotificationSound = "chime" | "ping" | "none";
+
+export type ThemeMode = "light" | "dark" | "system";
+
+export type FeedbackCategory = "Bug" | "Suggestion" | "Job listing issue" | "Other";

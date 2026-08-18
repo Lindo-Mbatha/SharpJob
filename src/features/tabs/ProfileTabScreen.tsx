@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  Compass,
   FileText,
   Globe,
   LifeBuoy,
@@ -13,6 +14,7 @@ import {
   Lock,
   Mail,
   MapPin,
+  Monitor,
   Moon,
   Phone,
   Search,
@@ -29,7 +31,7 @@ import {
   Zap,
   ArrowLeft
 } from "lucide-react";
-import { NotificationFrequency } from "../app/types/domain";
+import { FeedbackCategory, NotificationFrequency, ThemeMode } from "../app/types/domain";
 import { APP_VERSION } from "../../version";
 
 type IconCmp = React.ComponentType<{ className?: string }>;
@@ -132,6 +134,7 @@ function ReaderTopBar({ title, onBack, onBackLabel, right, dark, accentText }: {
 
 export function ProfileTabScreen({
   darkMode,
+  themeMode,
   activeAccentText,
   activeAccentPrimary,
   activeAccentBorderActive,
@@ -171,6 +174,8 @@ export function ProfileTabScreen({
   helpQuery,
   helpOpenFaq,
   feedbackText,
+  feedbackCategory,
+  feedbackRating,
   accessibilityTalkBackHints,
   accessibilityHighContrast,
   accessibilityReduceMotion,
@@ -179,7 +184,7 @@ export function ProfileTabScreen({
   accessibilityReduceTransparency,
   accessibilityFocusIndicators,
   accessibilityTextSize,
-  setDarkMode,
+  setThemeMode,
   setAccentColor,
   setProfileSubScreen,
   setApplicantName,
@@ -209,6 +214,8 @@ export function ProfileTabScreen({
   setHelpQuery,
   setHelpOpenFaq,
   setFeedbackText,
+  setFeedbackCategory,
+  setFeedbackRating,
   setAccessibilityTalkBackHints,
   setAccessibilityHighContrast,
   setAccessibilityReduceMotion,
@@ -222,9 +229,11 @@ export function ProfileTabScreen({
   onProfileSaved,
   onHeadlineSaved,
   onRateApp,
+  onReplayOnboarding,
   triggerNotification
 }: {
   darkMode: boolean;
+  themeMode: ThemeMode;
   activeAccentText: string;
   activeAccentPrimary: string;
   activeAccentBorderActive: string;
@@ -264,6 +273,8 @@ export function ProfileTabScreen({
   helpQuery: string;
   helpOpenFaq: string | null;
   feedbackText: string;
+  feedbackCategory: FeedbackCategory;
+  feedbackRating: number;
   accessibilityTalkBackHints: boolean;
   accessibilityHighContrast: boolean;
   accessibilityReduceMotion: boolean;
@@ -272,7 +283,7 @@ export function ProfileTabScreen({
   accessibilityReduceTransparency: boolean;
   accessibilityFocusIndicators: boolean;
   accessibilityTextSize: AccessibilityTextSize;
-  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setThemeMode: React.Dispatch<React.SetStateAction<ThemeMode>>;
   setAccentColor: React.Dispatch<React.SetStateAction<string>>;
   setProfileSubScreen: React.Dispatch<React.SetStateAction<ProfileSubScreen>>;
   setApplicantName: React.Dispatch<React.SetStateAction<string>>;
@@ -302,6 +313,8 @@ export function ProfileTabScreen({
   setHelpQuery: React.Dispatch<React.SetStateAction<string>>;
   setHelpOpenFaq: React.Dispatch<React.SetStateAction<string | null>>;
   setFeedbackText: React.Dispatch<React.SetStateAction<string>>;
+  setFeedbackCategory: React.Dispatch<React.SetStateAction<FeedbackCategory>>;
+  setFeedbackRating: React.Dispatch<React.SetStateAction<number>>;
   setAccessibilityTalkBackHints: React.Dispatch<React.SetStateAction<boolean>>;
   setAccessibilityHighContrast: React.Dispatch<React.SetStateAction<boolean>>;
   setAccessibilityReduceMotion: React.Dispatch<React.SetStateAction<boolean>>;
@@ -315,6 +328,7 @@ export function ProfileTabScreen({
   onProfileSaved: () => void;
   onHeadlineSaved: (headline: string) => void;
   onRateApp: () => void | Promise<void>;
+  onReplayOnboarding: () => void;
   triggerNotification: (message: string) => void;
 }) {
   const toggleTalkBackHints = () => {
@@ -440,7 +454,7 @@ export function ProfileTabScreen({
             dark={darkMode}
             accentText={activeAccentText}
             talkBackHintsEnabled={accessibilityTalkBackHints}
-            trailing={<span className="text-[10px] text-slate-400 font-semibold">{darkMode ? "Dark" : "Light"}</span>}
+            trailing={<span className="text-[10px] text-slate-400 font-semibold capitalize">{themeMode}</span>}
             onClick={() => setProfileSubScreen("settings")}
           />
           <SettingsRow
@@ -744,10 +758,14 @@ export function ProfileTabScreen({
           <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-4">
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Appearance</label>
-              <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border ${darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
-                <button onClick={() => setDarkMode(false)} className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${!darkMode ? `${activeAccentPrimary} text-white` : "text-slate-500"}`}><Sun className="h-3.5 w-3.5" /> Light</button>
-                <button onClick={() => setDarkMode(true)} className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${darkMode ? `${activeAccentPrimary} text-white` : "text-slate-500"}`}><Moon className="h-3.5 w-3.5" /> Dark</button>
+              <div className={`grid grid-cols-3 gap-1 p-1 rounded-xl border ${darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+                <button onClick={() => setThemeMode("light")} className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${themeMode === "light" ? `${activeAccentPrimary} text-white` : "text-slate-500"}`}><Sun className="h-3.5 w-3.5" /> Light</button>
+                <button onClick={() => setThemeMode("dark")} className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${themeMode === "dark" ? `${activeAccentPrimary} text-white` : "text-slate-500"}`}><Moon className="h-3.5 w-3.5" /> Dark</button>
+                <button onClick={() => setThemeMode("system")} className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${themeMode === "system" ? `${activeAccentPrimary} text-white` : "text-slate-500"}`}><Monitor className="h-3.5 w-3.5" /> System</button>
               </div>
+              {themeMode === "system" && (
+                <p className="text-[10px] text-slate-500 mt-1.5">Matches your device setting — currently {darkMode ? "Dark" : "Light"}.</p>
+              )}
             </div>
 
             <div>
@@ -788,6 +806,18 @@ export function ProfileTabScreen({
               <div className="w-9 h-9 rounded-lg border bg-rose-50 text-rose-600 border-rose-100 flex items-center justify-center shrink-0"><Volume2 className="h-4 w-4" /></div>
               <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Notification sound</p><p className="text-[11px] text-slate-500">Custom notification sounds are not available yet and will arrive in a future update.</p></div>
             </div>
+
+            <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
+
+            <button
+              onClick={() => { setProfileSubScreen(null); onReplayOnboarding(); }}
+              aria-label="Replay app walkthrough"
+              className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}
+            >
+              <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Compass className="h-4 w-4" /></div>
+              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Replay walkthrough</p><p className="text-[11px] text-slate-500">Show the guided tour again.</p></div>
+              <ChevronRight className={`h-4 w-4 shrink-0 ${activeAccentText}`} />
+            </button>
 
             <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
@@ -1001,6 +1031,42 @@ export function ProfileTabScreen({
 
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Send feedback</label>
+
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <label className="text-[9px] font-semibold text-slate-400 block mb-1">Category</label>
+                    <select
+                      value={feedbackCategory}
+                      onChange={e => setFeedbackCategory(e.target.value as FeedbackCategory)}
+                      aria-label="Feedback category"
+                      className={`w-full text-[11px] font-bold px-2 py-2 rounded-lg border focus:outline-none ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}
+                    >
+                      <option value="Bug">Bug</option>
+                      <option value="Suggestion">Suggestion</option>
+                      <option value="Job listing issue">Job listing issue</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-semibold text-slate-400 block mb-1">Rating (optional)</label>
+                    <div className="flex items-center h-[34px]">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setFeedbackRating(feedbackRating === i ? 0 : i)}
+                          aria-label={`Rate ${i} star${i > 1 ? "s" : ""}`}
+                          aria-pressed={feedbackRating === i}
+                          className="p-1.5"
+                        >
+                          <Star className={`h-4 w-4 ${i <= feedbackRating ? "text-amber-400 fill-current" : darkMode ? "text-slate-700" : "text-slate-300"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <textarea value={feedbackText} onChange={e => setFeedbackText(e.target.value)} rows={3} placeholder="Tell us what's working, what's not, or what you wish existed..." className={`w-full text-xs p-3 rounded-xl border focus:outline-none focus:ring-1 resize-none leading-relaxed ${darkMode ? "bg-slate-900 border-slate-800 text-white focus:border-slate-700" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-300"}`} />
               </div>
 
@@ -1021,13 +1087,22 @@ export function ProfileTabScreen({
               </div>
             </div>
             <div className={`p-3 border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
-              <button onClick={() => {
-                const subject = encodeURIComponent("SharpJob App Feedback");
-                const body = encodeURIComponent(feedbackText.trim());
-                window.open(`mailto:Hello@sharpjob.co.za?subject=${subject}&body=${body}`, "_blank");
-                triggerNotification("Opening your email client...");
-                setFeedbackText("");
-              }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
+              <button
+                disabled={!feedbackText.trim() && feedbackRating === 0}
+                onClick={() => {
+                  const subject = encodeURIComponent(`SharpJob Feedback: ${feedbackCategory}`);
+                  const ratingLine = feedbackRating > 0 ? `Rating: ${feedbackRating}/5` : "Rating: Not rated";
+                  const body = encodeURIComponent(
+                    `Category: ${feedbackCategory}\n${ratingLine}\n\n${feedbackText.trim()}`
+                  );
+                  window.open(`mailto:Hello@sharpjob.co.za?subject=${subject}&body=${body}`, "_blank");
+                  triggerNotification("Opening your email client...");
+                  setFeedbackText("");
+                  setFeedbackCategory("Suggestion");
+                  setFeedbackRating(0);
+                }}
+                className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 disabled:opacity-40 ${activeAccentPrimary}`}
+              >
                 <Send className="h-4 w-4" /> Send feedback
               </button>
             </div>

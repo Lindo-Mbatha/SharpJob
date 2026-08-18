@@ -191,7 +191,11 @@ export function SavedTabScreen({
               </div>
 
               {previousSavedListings.length === 0 ? (
-                <p className="text-[11px] text-slate-500 py-2">No closed listings in the 30-day retention window.</p>
+                <div className="py-4 text-center text-slate-400">
+                  <CalendarDays className="h-6 w-6 text-slate-500 mx-auto mb-1.5 opacity-40" />
+                  <p className="text-[11px] font-semibold">No closed listings</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Closed saved jobs will appear here for {PREVIOUS_LISTING_RETENTION_DAYS} days.</p>
+                </div>
               ) : previousSavedListings.map(({ job, closedDate, expiresAt, daysSinceClosed, daysUntilArchive }) => (
                 <div
                   key={`previous-${job.id}`}

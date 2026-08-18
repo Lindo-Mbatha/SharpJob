@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ProfileSubScreen } from "../../tabs/ProfileTabScreen";
-import { NotificationFrequency } from "../types/domain";
+import { FeedbackCategory, NotificationFrequency, ThemeMode } from "../types/domain";
+import { useSystemColorScheme } from "./useSystemColorScheme";
 
 const PROFILE_DETAILS_KEY = "sharpjob.profile.details.v1";
 const ACCESSIBILITY_SETTINGS_KEY = "sharpjob.profile.accessibility.v1";
@@ -46,7 +47,7 @@ type PersistedNotificationPreferences = {
 
 type PersistedAppSettings = {
   accentColor: string;
-  darkMode: boolean;
+  themeMode: ThemeMode;
   resumeVersions: Array<{ name: string; date: string; size: string; active: boolean }>;
   autoAttachResume: boolean;
   settingHaptics: boolean;
@@ -104,7 +105,9 @@ export function useProfileSettings() {
   const hasHydratedRef = useRef(false);
   const hasHydratedAccessibilityRef = useRef(false);
   const [accentColor, setAccentColor] = useState<string>("blue");
-  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
+  const systemPrefersDark = useSystemColorScheme();
+  const darkMode = themeMode === "system" ? systemPrefersDark : themeMode === "dark";
 
   const [applicantName, setApplicantName] = useState<string>("");
   const [applicantEmail, setApplicantEmail] = useState<string>("");
@@ -137,6 +140,8 @@ export function useProfileSettings() {
   const [helpQuery, setHelpQuery] = useState<string>("");
   const [helpOpenFaq, setHelpOpenFaq] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState<string>("");
+  const [feedbackCategory, setFeedbackCategory] = useState<FeedbackCategory>("Suggestion");
+  const [feedbackRating, setFeedbackRating] = useState<number>(0);
   const [accessibilityTalkBackHints, setAccessibilityTalkBackHints] = useState<boolean>(false);
   const [accessibilityHighContrast, setAccessibilityHighContrast] = useState<boolean>(false);
   const [accessibilityReduceMotion, setAccessibilityReduceMotion] = useState<boolean>(false);
@@ -213,9 +218,17 @@ export function useProfileSettings() {
         }
 
         if (storedAppSettings) {
-          const parsedSettings = JSON.parse(storedAppSettings) as Partial<PersistedAppSettings>;
+          const parsedSettings = JSON.parse(storedAppSettings) as Partial<PersistedAppSettings> & { darkMode?: boolean };
+          const validThemeModes: ThemeMode[] = ["light", "dark", "system"];
           setAccentColor(typeof parsedSettings.accentColor === "string" ? parsedSettings.accentColor : "blue");
-          setDarkMode(Boolean(parsedSettings.darkMode));
+          if (typeof parsedSettings.themeMode === "string" && validThemeModes.includes(parsedSettings.themeMode as ThemeMode)) {
+            setThemeMode(parsedSettings.themeMode as ThemeMode);
+          } else if (typeof parsedSettings.darkMode === "boolean") {
+            // Migrate settings persisted before the System theme option existed.
+            setThemeMode(parsedSettings.darkMode ? "dark" : "light");
+          } else {
+            setThemeMode("system");
+          }
           setResumeVersions(Array.isArray(parsedSettings.resumeVersions) ? parsedSettings.resumeVersions.filter((version): version is { name: string; date: string; size: string; active: boolean } =>
             typeof version?.name === "string" && typeof version.date === "string" && typeof version.size === "string" && typeof version.active === "boolean"
           ) : []);
@@ -307,7 +320,7 @@ export function useProfileSettings() {
 
     const payload: PersistedAppSettings = {
       accentColor,
-      darkMode,
+      themeMode,
       resumeVersions,
       autoAttachResume,
       settingHaptics,
@@ -315,11 +328,12 @@ export function useProfileSettings() {
     };
 
     void writeStoredValue(APP_SETTINGS_KEY, JSON.stringify(payload));
-  }, [accentColor, darkMode, resumeVersions, autoAttachResume, settingHaptics, settingLanguage]);
+  }, [accentColor, themeMode, resumeVersions, autoAttachResume, settingHaptics, settingLanguage]);
 
   return {
     state: {
       accentColor,
+      themeMode,
       darkMode,
       applicantName,
       applicantEmail,
@@ -348,6 +362,8 @@ export function useProfileSettings() {
       helpQuery,
       helpOpenFaq,
       feedbackText,
+      feedbackCategory,
+      feedbackRating,
       accessibilityTalkBackHints,
       accessibilityHighContrast,
       accessibilityReduceMotion,
@@ -359,7 +375,7 @@ export function useProfileSettings() {
     },
     actions: {
       setAccentColor,
-      setDarkMode,
+      setThemeMode,
       setApplicantName,
       setApplicantEmail,
       setApplicantPhone,
@@ -387,6 +403,8 @@ export function useProfileSettings() {
       setHelpQuery,
       setHelpOpenFaq,
       setFeedbackText,
+      setFeedbackCategory,
+      setFeedbackRating,
       setAccessibilityTalkBackHints,
       setAccessibilityHighContrast,
       setAccessibilityReduceMotion,
