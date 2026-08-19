@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ProfileSubScreen } from "../../tabs/ProfileTabScreen";
-import { FeedbackCategory, NotificationFrequency, ThemeMode } from "../types/domain";
+import { CandidateStatus, FeedbackCategory, NotificationFrequency, PresencePreference, ThemeMode } from "../types/domain";
 import { useSystemColorScheme } from "./useSystemColorScheme";
 
 const PROFILE_DETAILS_KEY = "sharpjob.profile.details.v1";
@@ -20,6 +20,9 @@ type PersistedProfileDetails = {
   applicantPortfolio: string;
   applicantLinkedIn: string;
   profileSkills: string[];
+  candidateStatus: CandidateStatus;
+  presencePreference: PresencePreference;
+  profilePhotoUrl: string | null;
 };
 
 type PersistedAccessibilitySettings = {
@@ -119,6 +122,9 @@ export function useProfileSettings() {
   const [applicantLinkedIn, setApplicantLinkedIn] = useState<string>("");
   const [profileSkills, setProfileSkills] = useState<string[]>([]);
   const [profileSkillDraft, setProfileSkillDraft] = useState<string>("");
+  const [candidateStatus, setCandidateStatus] = useState<CandidateStatus>("active");
+  const [presencePreference, setPresencePreference] = useState<PresencePreference>("online");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [profileSubScreen, setProfileSubScreen] = useState<ProfileSubScreen>(null);
 
   const [resumeVersions, setResumeVersions] = useState<Array<{ name: string; date: string; size: string; active: boolean }>>([]);
@@ -181,6 +187,9 @@ export function useProfileSettings() {
           setApplicantPortfolio(typeof parsedProfile.applicantPortfolio === "string" ? parsedProfile.applicantPortfolio : "");
           setApplicantLinkedIn(typeof parsedProfile.applicantLinkedIn === "string" ? parsedProfile.applicantLinkedIn : "");
           setProfileSkills(Array.isArray(parsedProfile.profileSkills) ? parsedProfile.profileSkills.filter((skill): skill is string => typeof skill === "string") : []);
+          setCandidateStatus(parsedProfile.candidateStatus === "inactive" ? "inactive" : "active");
+          setPresencePreference(parsedProfile.presencePreference === "busy" ? "busy" : "online");
+          setProfilePhotoUrl(typeof parsedProfile.profilePhotoUrl === "string" ? parsedProfile.profilePhotoUrl : null);
         }
 
         if (storedAccessibility) {
@@ -265,7 +274,10 @@ export function useProfileSettings() {
       applicantAbout,
       applicantPortfolio,
       applicantLinkedIn,
-      profileSkills
+      profileSkills,
+      candidateStatus,
+      presencePreference,
+      profilePhotoUrl
     };
 
     await writeStoredValue(PROFILE_DETAILS_KEY, JSON.stringify(payload));
@@ -345,6 +357,9 @@ export function useProfileSettings() {
       applicantLinkedIn,
       profileSkills,
       profileSkillDraft,
+      candidateStatus,
+      presencePreference,
+      profilePhotoUrl,
       profileSubScreen,
       resumeVersions,
       autoAttachResume,
@@ -386,6 +401,9 @@ export function useProfileSettings() {
       setApplicantLinkedIn,
       setProfileSkills,
       setProfileSkillDraft,
+      setCandidateStatus,
+      setPresencePreference,
+      setProfilePhotoUrl,
       setProfileSubScreen,
       setResumeVersions,
       setAutoAttachResume,

@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowLeft, Bookmark, Calendar, Check, ExternalLink, Info, Loader2, Share2, ShieldAlert, X } from "lucide-react";
 import { Job } from "../listings/types";
-import { getCategoryStyles } from "../listings/utils";
+import { displayOrFallback, getCategoryStyles } from "../listings/utils";
 import { ApplyOutboundMode } from "../app/types/domain";
 
 const GOV_HOSTNAME_PATTERNS = [
@@ -139,21 +139,27 @@ export function JobDetailsDrawer({
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className={`p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
             <span className={`block text-[10px] uppercase font-bold tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Location</span>
-            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{selectedJob.location}</span>
+            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{displayOrFallback(selectedJob.location)}</span>
           </div>
           <div className={`p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
             <span className={`block text-[10px] uppercase font-bold tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Salary Range</span>
-            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{selectedJob.salary}</span>
+            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{displayOrFallback(selectedJob.salary)}</span>
           </div>
           <div className={`p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
-            <span className={`block text-[10px] uppercase font-bold tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Employment Type</span>
-            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{formatEmploymentType(selectedJob.type)}</span>
+            <span className={`block text-[10px] uppercase font-bold tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Date Posted</span>
+            <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{displayOrFallback(selectedJob.datePosted)}</span>
           </div>
           <div className={`p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-rose-50/60 border-rose-200"}`}>
             <span className="block text-[10px] uppercase font-bold tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5 shrink-0" /> Deadline
             </span>
-            <span className="block text-[12px] font-bold leading-snug whitespace-normal break-words select-text text-red-700 dark:text-red-400">{selectedJob.closes}</span>
+            <span className="block text-[12px] font-bold leading-snug whitespace-normal break-words select-text text-red-700 dark:text-red-400">{displayOrFallback(selectedJob.closes)}</span>
+          </div>
+          <div className="col-span-2 flex justify-center">
+            <div className={`w-1/2 p-3 rounded-xl border flex flex-col gap-1 ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+              <span className={`block text-[10px] uppercase font-bold tracking-wider ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Employment Type</span>
+              <span className={`block text-[12px] font-bold leading-snug whitespace-normal break-words select-text ${darkMode ? "text-slate-100" : "text-slate-900"}`}>{displayOrFallback(formatEmploymentType(selectedJob.type))}</span>
+            </div>
           </div>
         </div>
 

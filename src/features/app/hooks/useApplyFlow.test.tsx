@@ -13,6 +13,7 @@ const selectedJob: Job = {
   type: "Full-time",
   salary: "R150,000 - R185,000",
   closes: "Oct 15, 2026",
+  datePosted: "Sep 20, 2026",
   description: "Desc",
   responsibilities: ["Do work"],
   requirements: ["Know things"],

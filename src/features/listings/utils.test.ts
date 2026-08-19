@@ -11,6 +11,7 @@ const baseJob: Job = {
   type: "Full-time",
   salary: "R90k-R130k",
   closes: "2050-01-01",
+  datePosted: "2049-12-01",
   description: "Design product flows",
   responsibilities: ["Ship features"],
   requirements: ["Figma"],

@@ -1,7 +1,7 @@
 import React from "react";
 import { Banknote, Bookmark, Briefcase, Calendar, CheckCircle, ChevronRight, MapPin, Trash2 } from "lucide-react";
 import { Job } from "../types";
-import { getCategoryStyles } from "../utils";
+import { displayOrFallback, getCategoryStyles } from "../utils";
 
 type JobCardVariant = "default" | "saved";
 
@@ -124,7 +124,7 @@ export function JobCard({
       <div className="grid grid-cols-3 gap-2 mt-3.5 pt-0.5 text-[11px] text-slate-500 select-none">
         <div className="flex items-start gap-1">
           <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
-          <span className="line-clamp-2 leading-snug">{job.location.split("(")[0].trim()}</span>
+          <span className="line-clamp-2 leading-snug">{displayOrFallback(job.location.split("(")[0].trim())}</span>
         </div>
         <div className="flex items-start gap-1 justify-center">
           <Briefcase className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
@@ -132,7 +132,7 @@ export function JobCard({
         </div>
         <div className="flex items-start gap-1 justify-end font-medium text-slate-600 dark:text-slate-400">
           <Banknote className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
-          <span className="line-clamp-2 leading-snug text-right">{extractSalaryPreview(job.salary)}</span>
+          <span className="line-clamp-2 leading-snug text-right">{displayOrFallback(extractSalaryPreview(job.salary))}</span>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export function JobCard({
         ) : (
           <div className="flex items-center gap-1 text-red-500 text-[10px] font-medium uppercase tracking-wider">
             <Calendar className="h-3.5 w-3.5" />
-            <span>Closes {job.closes.split(",")[0]}</span>
+            <span>{job.closes ? `Closes ${job.closes.split(",")[0]}` : "Closing date not provided"}</span>
           </div>
         )}
         <span className={`text-[11px] font-semibold flex items-center gap-0.5 shrink-0 ${activeAccentText}`}>

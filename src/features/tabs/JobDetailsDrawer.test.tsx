@@ -13,6 +13,7 @@ function buildJob(overrides: Partial<Job> = {}): Job {
     type: "Full-time",
     salary: "R80k - R100k",
     closes: "In 7 days",
+    datePosted: "Jul 25, 2026",
     description: "Build modern UI systems",
     responsibilities: ["Ship components"],
     requirements: ["5+ years React"],

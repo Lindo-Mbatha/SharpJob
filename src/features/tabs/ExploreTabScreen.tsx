@@ -173,13 +173,15 @@ export function ExploreTabScreen({
               }`}
             />
             {exploreQuery && (
-              <button
-                onClick={() => setExploreQuery("")}
-                aria-label="Clear job search"
-                className="touch-target absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+              <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                <button
+                  onClick={() => setExploreQuery("")}
+                  aria-label="Clear job search"
+                  className="touch-target text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             )}
           </div>
           <button
@@ -195,7 +197,7 @@ export function ExploreTabScreen({
           </button>
         </div>
 
-        {exploreQuery.trim() === "" && recentSearches.length > 0 && (
+        {recentSearches.length > 0 && (
           <div
             className="flex items-center gap-1.5 overflow-x-scroll overflow-y-hidden no-scrollbar py-0.5 cursor-grab active:cursor-grabbing"
             onWheel={onHorizontalWheel}

@@ -26,6 +26,7 @@ import { useAlerts } from "./features/app/hooks/useAlerts";
 import { useApplyFlow } from "./features/app/hooks/useApplyFlow";
 import { useJobActions } from "./features/app/hooks/useJobActions";
 import { useDeviceStatus } from "./features/app/hooks/useDeviceStatus";
+import { useAppVisibility } from "./features/app/hooks/useAppVisibility";
 import { useExploreFilters } from "./features/app/hooks/useExploreFilters";
 import { readStoredValue, useProfileSettings, writeStoredValue } from "./features/app/hooks/useProfileSettings";
 import { useOnboarding } from "./features/app/hooks/useOnboarding";
@@ -143,6 +144,9 @@ export default function App() {
     applicantLinkedIn,
     profileSkills,
     profileSkillDraft,
+    candidateStatus,
+    presencePreference,
+    profilePhotoUrl,
     profileSubScreen,
     resumeVersions,
     autoAttachResume,
@@ -185,6 +189,9 @@ export default function App() {
     setApplicantLinkedIn,
     setProfileSkills,
     setProfileSkillDraft,
+    setCandidateStatus,
+    setPresencePreference,
+    setProfilePhotoUrl,
     setProfileSubScreen,
     setResumeVersions,
     setAutoAttachResume,
@@ -236,6 +243,9 @@ export default function App() {
     networkOnline,
     isMobileView
   } = deviceState;
+
+  const isAppVisible = useAppVisibility();
+  const presenceStatus = !networkOnline || !isAppVisible ? "offline" : presencePreference;
 
   const [activeTab, setActiveTab] = useState<AppTab>("home");
   const [showSplash, setShowSplash] = useState<boolean>(shouldShowInitialSplash);
@@ -1066,6 +1076,11 @@ export default function App() {
                   applicantLinkedIn={applicantLinkedIn}
                   profileSkills={profileSkills}
                   profileSkillDraft={profileSkillDraft}
+                  candidateStatus={candidateStatus}
+                  presenceStatus={presenceStatus}
+                  presencePreference={presencePreference}
+                  networkOnline={networkOnline}
+                  profilePhotoUrl={profilePhotoUrl}
                   uploadedResume={uploadedResume}
                   isUploading={isUploading}
                   uploadProgress={uploadProgress}
@@ -1108,6 +1123,9 @@ export default function App() {
                   setApplicantLinkedIn={setApplicantLinkedIn}
                   setProfileSkills={setProfileSkills}
                   setProfileSkillDraft={setProfileSkillDraft}
+                  setCandidateStatus={setCandidateStatus}
+                  setPresencePreference={setPresencePreference}
+                  setProfilePhotoUrl={setProfilePhotoUrl}
                   setUploadedResume={setUploadedResume}
                   setResumeVersions={setResumeVersions}
                   setAutoAttachResume={setAutoAttachResume}

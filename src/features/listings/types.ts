@@ -7,6 +7,7 @@ export interface Job {
   type: "Full-time" | "Contract" | "Remote" | "Hybrid";
   salary: string;
   closes: string;
+  datePosted: string;
   description: string;
   responsibilities: string[];
   requirements: string[];

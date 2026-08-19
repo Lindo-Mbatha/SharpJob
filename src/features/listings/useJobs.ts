@@ -29,6 +29,7 @@ function mapRow(row: Record<string, unknown>): Job {
     type: (row.employment_type as Job["type"]) ?? "Full-time",
     salary: String(row.salary_range ?? ""),
     closes: formatDeadline(row.deadline),
+    datePosted: formatDeadline(row.date_posted),
     description: String(row.overview ?? ""),
     responsibilities: parseTextToArray(row.responsibilities),
     requirements: parseTextToArray(row.requirements),

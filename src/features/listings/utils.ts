@@ -31,6 +31,10 @@ export const getVisiblePageChips = (currentPage: number, totalPages: number): Ar
   return pages;
 };
 
+export const displayOrFallback = (value: string | null | undefined): string => {
+  return value && value.trim() ? value : "Not provided";
+};
+
 export const parseJobCloseDate = (closes: string): Date | null => {
   const parsed = new Date(closes);
   if (Number.isNaN(parsed.getTime())) return null;

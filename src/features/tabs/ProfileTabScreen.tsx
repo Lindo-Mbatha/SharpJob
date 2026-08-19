@@ -2,6 +2,7 @@ import React from "react";
 import {
   Bell,
   BellRing,
+  Camera,
   Check,
   ChevronDown,
   ChevronRight,
@@ -31,7 +32,8 @@ import {
   Zap,
   ArrowLeft
 } from "lucide-react";
-import { FeedbackCategory, NotificationFrequency, ThemeMode } from "../app/types/domain";
+import { CandidateStatus, FeedbackCategory, NotificationFrequency, PresencePreference, PresenceStatus, ThemeMode } from "../app/types/domain";
+import { resizeImageFileToDataUrl } from "../app/utils/image";
 import { APP_VERSION } from "../../version";
 
 type IconCmp = React.ComponentType<{ className?: string }>;
@@ -155,6 +157,11 @@ export function ProfileTabScreen({
   applicantLinkedIn,
   profileSkills,
   profileSkillDraft,
+  candidateStatus,
+  presenceStatus,
+  presencePreference,
+  networkOnline,
+  profilePhotoUrl,
   uploadedResume,
   isUploading,
   uploadProgress,
@@ -197,6 +204,9 @@ export function ProfileTabScreen({
   setApplicantLinkedIn,
   setProfileSkills,
   setProfileSkillDraft,
+  setCandidateStatus,
+  setPresencePreference,
+  setProfilePhotoUrl,
   setUploadedResume,
   setResumeVersions,
   setAutoAttachResume,
@@ -254,6 +264,11 @@ export function ProfileTabScreen({
   applicantLinkedIn: string;
   profileSkills: string[];
   profileSkillDraft: string;
+  candidateStatus: CandidateStatus;
+  presenceStatus: PresenceStatus;
+  presencePreference: PresencePreference;
+  networkOnline: boolean;
+  profilePhotoUrl: string | null;
   uploadedResume: string | null;
   isUploading: boolean;
   uploadProgress: number;
@@ -296,6 +311,9 @@ export function ProfileTabScreen({
   setApplicantLinkedIn: React.Dispatch<React.SetStateAction<string>>;
   setProfileSkills: React.Dispatch<React.SetStateAction<string[]>>;
   setProfileSkillDraft: React.Dispatch<React.SetStateAction<string>>;
+  setCandidateStatus: React.Dispatch<React.SetStateAction<CandidateStatus>>;
+  setPresencePreference: React.Dispatch<React.SetStateAction<PresencePreference>>;
+  setProfilePhotoUrl: React.Dispatch<React.SetStateAction<string | null>>;
   setUploadedResume: React.Dispatch<React.SetStateAction<string | null>>;
   setResumeVersions: React.Dispatch<React.SetStateAction<ResumeVersion[]>>;
   setAutoAttachResume: React.Dispatch<React.SetStateAction<boolean>>;
@@ -337,6 +355,35 @@ export function ProfileTabScreen({
     triggerNotification(next ? "TalkBack support hints enabled." : "TalkBack support hints disabled.");
   };
 
+  const handlePickProfilePhoto = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        triggerNotification("Please choose an image file.");
+        return;
+      }
+
+      try {
+        const dataUrl = await resizeImageFileToDataUrl(file, 256);
+        setProfilePhotoUrl(dataUrl);
+        triggerNotification("Profile photo updated.");
+      } catch {
+        triggerNotification("Could not load that image. Please try again.");
+      }
+    };
+    input.click();
+  };
+
+  const handleRemoveProfilePhoto = () => {
+    setProfilePhotoUrl(null);
+    triggerNotification("Profile photo removed.");
+  };
+
   const previewSizeClass =
     accessibilityTextSize === "Small"
       ? "text-xs"
@@ -353,13 +400,21 @@ export function ProfileTabScreen({
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className={`w-14 h-14 rounded-full border-2 overflow-hidden bg-slate-100 flex items-center justify-center ${activeAccentBorderActive}`}>
-              <div className="w-11 h-11 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-700 text-lg tracking-tight">
-                {applicantName.trim().split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?"}
-              </div>
+              {profilePhotoUrl ? (
+                <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-700 text-lg tracking-tight">
+                  {applicantName.trim().split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?"}
+                </div>
+              )}
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full border border-white">
-              <Check className="h-2.5 w-2.5" />
-            </div>
+            <div
+              role="status"
+              aria-label={`Status: ${presenceStatus === "online" ? "Online" : presenceStatus === "busy" ? "Busy" : "Offline"}`}
+              className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 ${darkMode ? "border-slate-950" : "border-white"} ${
+                presenceStatus === "online" ? "bg-emerald-500" : presenceStatus === "busy" ? "bg-rose-500" : "bg-slate-400"
+              }`}
+            />
           </div>
 
           <div className="min-w-0 flex-1">
@@ -369,8 +424,12 @@ export function ProfileTabScreen({
             <p className="text-xs text-slate-500 truncate">
               {applicantHeadline || "Your headline"} - {applicantLocation || "-"}
             </p>
-            <span className="inline-block mt-1 text-[9px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold uppercase">
-              Active Candidate
+            <span className={`inline-block mt-1 text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
+              candidateStatus === "inactive"
+                ? "bg-rose-50 text-rose-700 border border-rose-100"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+            }`}>
+              {candidateStatus === "inactive" ? "Non-Active Candidate" : "Active Candidate"}
             </span>
           </div>
         </div>
@@ -513,14 +572,102 @@ export function ProfileTabScreen({
           />
           <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-5">
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
-              <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center bg-slate-200 font-bold text-slate-700 text-sm ${activeAccentBorderActive}`}>
-                {applicantName.trim().split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?"}
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={handlePickProfilePhoto}
+                  aria-label="Change profile photo"
+                  className={`w-11 h-11 rounded-full border-2 overflow-hidden flex items-center justify-center bg-slate-200 font-bold text-slate-700 text-sm ${activeAccentBorderActive}`}
+                >
+                  {profilePhotoUrl ? (
+                    <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    applicantName.trim().split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?"
+                  )}
+                </button>
+                <div
+                  className={`absolute -bottom-1 -right-1 rounded-full p-1 border pointer-events-none ${
+                    darkMode ? "bg-slate-800 border-slate-950 text-slate-200" : "bg-white border-white text-slate-600"
+                  }`}
+                >
+                  <Camera className="h-2.5 w-2.5" />
+                </div>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Preview - recruiters see this</p>
                 <p className={`text-[13px] font-bold truncate ${darkMode ? "text-white" : "text-slate-800"}`}>{applicantName || "Your name"}</p>
                 <p className="text-[11px] text-slate-500 truncate">{applicantHeadline || "Your headline"} - {applicantLocation || "-"}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button type="button" onClick={handlePickProfilePhoto} className={`text-[10px] font-semibold underline-offset-2 hover:underline ${activeAccentText}`}>
+                    {profilePhotoUrl ? "Change photo" : "Add photo"}
+                  </button>
+                  {profilePhotoUrl && (
+                    <button type="button" onClick={handleRemoveProfilePhoto} className="text-[10px] font-semibold text-slate-400 hover:text-red-500 underline-offset-2 hover:underline">
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Candidate status</label>
+              <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border ${darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+                <button
+                  onClick={() => setCandidateStatus("active")}
+                  className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                    candidateStatus === "active" ? "bg-emerald-600 text-white" : "text-slate-500"
+                  }`}
+                >
+                  <Check className="h-3.5 w-3.5" /> Active
+                </button>
+                <button
+                  onClick={() => setCandidateStatus("inactive")}
+                  className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                    candidateStatus === "inactive" ? "bg-rose-600 text-white" : "text-slate-500"
+                  }`}
+                >
+                  <X className="h-3.5 w-3.5" /> Non-Active
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-1.5">
+                {candidateStatus === "inactive"
+                  ? "Your profile shows as not currently looking for opportunities."
+                  : "Recruiters can see that you're open to opportunities."}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Online status</label>
+              <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border ${darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200"} ${!networkOnline ? "opacity-50" : ""}`}>
+                <button
+                  type="button"
+                  disabled={!networkOnline}
+                  onClick={() => setPresencePreference("online")}
+                  aria-pressed={presencePreference === "online"}
+                  className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all disabled:cursor-not-allowed ${
+                    presencePreference === "online" ? "bg-emerald-600 text-white" : "text-slate-500"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" /> Online
+                </button>
+                <button
+                  type="button"
+                  disabled={!networkOnline}
+                  onClick={() => setPresencePreference("busy")}
+                  aria-pressed={presencePreference === "busy"}
+                  className={`py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all disabled:cursor-not-allowed ${
+                    presencePreference === "busy" ? "bg-rose-600 text-white" : "text-slate-500"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" /> Busy
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-1.5">
+                {!networkOnline
+                  ? "You're offline, so your status shows as Offline. Reconnect to change it."
+                  : "Shown next to your profile photo while the app is open."}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
