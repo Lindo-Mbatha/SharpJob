@@ -54,7 +54,6 @@ type PersistedAppSettings = {
   resumeVersions: Array<{ name: string; date: string; size: string; active: boolean }>;
   autoAttachResume: boolean;
   settingHaptics: boolean;
-  settingLanguage: string;
 };
 
 type PreferencesLike = {
@@ -141,7 +140,6 @@ export function useProfileSettings() {
   const [prefPush, setPrefPush] = useState<boolean>(true);
 
   const [settingHaptics, setSettingHaptics] = useState<boolean>(true);
-  const [settingLanguage, setSettingLanguage] = useState<string>("English");
 
   const [helpQuery, setHelpQuery] = useState<string>("");
   const [helpOpenFaq, setHelpOpenFaq] = useState<string | null>(null);
@@ -243,7 +241,6 @@ export function useProfileSettings() {
           ) : []);
           setAutoAttachResume(Boolean(parsedSettings.autoAttachResume));
           setSettingHaptics(typeof parsedSettings.settingHaptics === "boolean" ? parsedSettings.settingHaptics : true);
-          setSettingLanguage(typeof parsedSettings.settingLanguage === "string" ? parsedSettings.settingLanguage : "English");
         }
       } catch (_error) {
         // Ignore corrupt/missing payloads and keep first-time empty defaults.
@@ -335,12 +332,11 @@ export function useProfileSettings() {
       themeMode,
       resumeVersions,
       autoAttachResume,
-      settingHaptics,
-      settingLanguage
+      settingHaptics
     };
 
     void writeStoredValue(APP_SETTINGS_KEY, JSON.stringify(payload));
-  }, [accentColor, themeMode, resumeVersions, autoAttachResume, settingHaptics, settingLanguage]);
+  }, [accentColor, themeMode, resumeVersions, autoAttachResume, settingHaptics]);
 
   return {
     state: {
@@ -373,7 +369,6 @@ export function useProfileSettings() {
       prefEmail,
       prefPush,
       settingHaptics,
-      settingLanguage,
       helpQuery,
       helpOpenFaq,
       feedbackText,
@@ -417,7 +412,6 @@ export function useProfileSettings() {
       setPrefEmail,
       setPrefPush,
       setSettingHaptics,
-      setSettingLanguage,
       setHelpQuery,
       setHelpOpenFaq,
       setFeedbackText,

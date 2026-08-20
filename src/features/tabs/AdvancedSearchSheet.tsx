@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Info, MapPin, Search, X } from "lucide-react";
-import { EXPERIENCE_SALARY_BANDS } from "../listings/constants";
+import { EXPERIENCE_SALARY_BANDS, SALARY_FILTER_MAX as SALARY_MAX, SALARY_FILTER_MIN as SALARY_MIN } from "../listings/constants";
 
 export function AdvancedSearchSheet({
   darkMode,
@@ -52,6 +52,21 @@ export function AdvancedSearchSheet({
   onClear: () => void;
 }) {
   const activeExperienceBand = advExp ? EXPERIENCE_SALARY_BANDS[advExp] : null;
+
+  const [salaryInput, setSalaryInput] = useState(String(advSalaryMin));
+
+  useEffect(() => {
+    setSalaryInput(String(advSalaryMin));
+  }, [advSalaryMin]);
+
+  const commitSalaryInput = (raw: string) => {
+    const parsed = parseInt(raw.replace(/[^\d]/g, ""), 10);
+    const next = Number.isFinite(parsed) && parsed > 0
+      ? Math.min(SALARY_MAX, Math.max(SALARY_MIN, parsed))
+      : SALARY_MIN;
+    setAdvSalaryMin(next);
+    setSalaryInput(String(next));
+  };
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col">
@@ -111,12 +126,13 @@ export function AdvancedSearchSheet({
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Job type</label>
             <div className="flex flex-wrap gap-2">
               {[
-                { label: "Permanent", value: "Full-time" },
+                { label: "Permanent", value: "Permanent" },
                 { label: "Part-time", value: "Part-time" },
                 { label: "Contract", value: "Contract" },
                 { label: "Remote", value: "Remote" },
                 { label: "Internship", value: "Internship" },
-                { label: "Hybrid", value: "Hybrid" }
+                { label: "Hybrid", value: "Hybrid" },
+                { label: "Graduate", value: "Graduate" }
               ].map(({ label, value }) => {
                 const isActive = advTypes.includes(value);
                 return (
@@ -137,17 +153,32 @@ export function AdvancedSearchSheet({
           </div>
 
           <div>
-            <div className="flex justify-between items-end mb-2">
+            <div className="flex justify-between items-center mb-2">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Salary range (minimum)</label>
-              <span className={`text-[11px] font-bold ${activeAccentText}`}>
-                R{advSalaryMin}k - R750K+
-              </span>
+              <div className="flex items-center gap-1">
+                <span className={`text-[11px] font-bold ${activeAccentText}`}>R</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={salaryInput}
+                  onChange={(e) => setSalaryInput(e.target.value.replace(/[^\d]/g, ""))}
+                  onBlur={(e) => commitSalaryInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.currentTarget.blur();
+                  }}
+                  aria-label="Minimum salary in Rand"
+                  className={`w-16 px-1.5 py-0.5 text-[11px] font-bold text-right rounded-md border focus:outline-none focus:ring-1 ${activeAccentText} ${
+                    darkMode ? "bg-slate-900 border-slate-800 focus:border-slate-700" : "bg-slate-50 border-slate-200 focus:border-slate-300"
+                  }`}
+                />
+                <span className={`text-[11px] font-bold ${activeAccentText}`}>- R750,000+</span>
+              </div>
             </div>
             <input
               type="range"
-              min="1"
-              max="750"
-              step="1"
+              min={SALARY_MIN}
+              max={SALARY_MAX}
+              step="1000"
               value={advSalaryMin}
               onChange={(e) => setAdvSalaryMin(Number(e.target.value))}
               className={`w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer outline-none ${activeAccentText}`}
@@ -237,7 +268,7 @@ export function AdvancedSearchSheet({
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200">
                 <Info className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 <p>
-                  <strong>{advExp} overrides every other filter.</strong> Results will only show roles with starting salaries in the {activeExperienceBand.max === Number.POSITIVE_INFINITY ? `R${(activeExperienceBand.min * 1000).toLocaleString()}+` : `R${(activeExperienceBand.min * 1000).toLocaleString()} – R${(activeExperienceBand.max * 1000).toLocaleString()}`} compensation band.
+                  <strong>{advExp} overrides every other filter.</strong> Results will only show roles with starting salaries in the {activeExperienceBand.max === Number.POSITIVE_INFINITY ? `R${activeExperienceBand.min.toLocaleString()}+` : `R${activeExperienceBand.min.toLocaleString()} – R${activeExperienceBand.max.toLocaleString()}`} compensation band.
                 </p>
               </div>
             )}

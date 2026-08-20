@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveApplyUrl, getActiveSavedJobs, getPreviousSavedListings, getVisiblePageChips } from "./utils";
+import { deriveApplyUrl, getActiveSavedJobs, getPreviousSavedListings, getVisiblePageChips, sortJobsAlphabetically } from "./utils";
 import { Job } from "./types";
 
 const baseJob: Job = {
@@ -53,5 +53,25 @@ describe("listings utils", () => {
     expect(activeSaved.map((j) => j.id)).toEqual(["active"]);
     expect(previousSaved.map((entry) => entry.job.id)).toEqual(["previous"]);
     expect(previousSaved[0].daysUntilArchive).toBeGreaterThan(0);
+  });
+
+  it("sorts jobs alphabetically by title, case-insensitively", () => {
+    const jobs: Job[] = [
+      { ...baseJob, id: "c", title: "civil engineer" },
+      { ...baseJob, id: "a", title: "Backend Developer" },
+      { ...baseJob, id: "b", title: "Business Analyst" }
+    ];
+
+    expect(sortJobsAlphabetically(jobs).map(j => j.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("does not mutate the original array when sorting alphabetically", () => {
+    const jobs: Job[] = [
+      { ...baseJob, id: "z", title: "Zoologist" },
+      { ...baseJob, id: "a", title: "Analyst" }
+    ];
+
+    sortJobsAlphabetically(jobs);
+    expect(jobs.map(j => j.id)).toEqual(["z", "a"]);
   });
 });

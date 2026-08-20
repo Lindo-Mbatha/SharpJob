@@ -55,7 +55,7 @@ describe("product telemetry wrappers", () => {
       location: "remote",
       experience: "mid",
       types_count: 2,
-      min_salary_k: 120,
+      min_salary: 120000,
       date_posted: "Past week",
       skills_count: 3
     });
@@ -67,7 +67,7 @@ describe("product telemetry wrappers", () => {
         location: expect.any(String),
         experience: expect.any(String),
         types_count: expect.any(Number),
-        min_salary_k: expect.any(Number),
+        min_salary: expect.any(Number),
         date_posted: expect.any(String),
         skills_count: expect.any(Number)
       })

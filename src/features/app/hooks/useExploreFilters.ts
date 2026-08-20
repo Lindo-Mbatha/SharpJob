@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { EXPERIENCE_SALARY_BANDS } from "../../listings/constants";
+import { EXPERIENCE_SALARY_BANDS, SALARY_FILTER_MIN } from "../../listings/constants";
 import { readStoredValue, writeStoredValue } from "./useProfileSettings";
 
 const RECENT_SEARCHES_KEY = "sharpjob.explore.recentSearches.v1";
@@ -8,7 +8,6 @@ const MAX_RECENT_SEARCHES = 6;
 export function useExploreFilters() {
   const [exploreQuery, setExploreQuery] = useState<string>("");
   const [exploreCategory, setExploreCategory] = useState<string>("All");
-  const [exploreType, setExploreType] = useState<string>("All");
 
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
@@ -41,7 +40,7 @@ export function useExploreFilters() {
   const [advLocation, setAdvLocation] = useState<string>("");
   const [advExp, setAdvExp] = useState<keyof typeof EXPERIENCE_SALARY_BANDS | null>(null);
   const [advTypes, setAdvTypes] = useState<string[]>([]);
-  const [advSalaryMin, setAdvSalaryMin] = useState<number>(1);
+  const [advSalaryMin, setAdvSalaryMin] = useState<number>(SALARY_FILTER_MIN);
   const [advDate, setAdvDate] = useState<string>("Any time");
   const [advSkills, setAdvSkills] = useState<string[]>([]);
   const [advSkillInput, setAdvSkillInput] = useState<string>("");
@@ -53,7 +52,6 @@ export function useExploreFilters() {
   }, [
     exploreQuery,
     exploreCategory,
-    exploreType,
     isAdvSearchApplied,
     advKeyword,
     advLocation,
@@ -67,7 +65,6 @@ export function useExploreFilters() {
   const resetFilters = () => {
     setExploreQuery("");
     setExploreCategory("All");
-    setExploreType("All");
   };
 
   const persistRecentSearches = (next: string[]) => {
@@ -109,7 +106,7 @@ export function useExploreFilters() {
     setAdvLocation("");
     setAdvExp(null);
     setAdvTypes([]);
-    setAdvSalaryMin(1);
+    setAdvSalaryMin(SALARY_FILTER_MIN);
     setAdvDate("Any time");
     setAdvSkills([]);
   };
@@ -118,7 +115,6 @@ export function useExploreFilters() {
     state: {
       exploreQuery,
       exploreCategory,
-      exploreType,
       explorePage,
       isAdvSearchOpen,
       isAdvSearchApplied,
@@ -135,7 +131,6 @@ export function useExploreFilters() {
     actions: {
       setExploreQuery,
       setExploreCategory,
-      setExploreType,
       setExplorePage,
       setAdvKeyword,
       setAdvLocation,

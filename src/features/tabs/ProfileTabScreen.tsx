@@ -177,7 +177,6 @@ export function ProfileTabScreen({
   prefEmail,
   prefPush,
   settingHaptics,
-  settingLanguage,
   helpQuery,
   helpOpenFaq,
   feedbackText,
@@ -220,7 +219,6 @@ export function ProfileTabScreen({
   setPrefEmail,
   setPrefPush,
   setSettingHaptics,
-  setSettingLanguage,
   setHelpQuery,
   setHelpOpenFaq,
   setFeedbackText,
@@ -284,7 +282,6 @@ export function ProfileTabScreen({
   prefEmail: boolean;
   prefPush: boolean;
   settingHaptics: boolean;
-  settingLanguage: string;
   helpQuery: string;
   helpOpenFaq: string | null;
   feedbackText: string;
@@ -327,7 +324,6 @@ export function ProfileTabScreen({
   setPrefEmail: React.Dispatch<React.SetStateAction<boolean>>;
   setPrefPush: React.Dispatch<React.SetStateAction<boolean>>;
   setSettingHaptics: React.Dispatch<React.SetStateAction<boolean>>;
-  setSettingLanguage: React.Dispatch<React.SetStateAction<string>>;
   setHelpQuery: React.Dispatch<React.SetStateAction<string>>;
   setHelpOpenFaq: React.Dispatch<React.SetStateAction<string | null>>;
   setFeedbackText: React.Dispatch<React.SetStateAction<string>>;
@@ -930,10 +926,8 @@ export function ProfileTabScreen({
 
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
               <div className="w-9 h-9 rounded-lg border bg-emerald-50 text-emerald-600 border-emerald-100 flex items-center justify-center shrink-0"><Globe className="h-4 w-4" /></div>
-              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Language</p><p className="text-[11px] text-slate-500">Interface & email copy.</p></div>
-              <select value={settingLanguage} onChange={e => { setSettingLanguage(e.target.value); triggerNotification(`Language set to ${e.target.value}.`); }} className={`text-[11px] font-bold px-2 py-1 rounded-lg border focus:outline-none ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}>
-                <option>English</option><option>Afrikaans</option><option>isiZulu</option><option>isiXhosa</option><option>Sesotho</option>
-              </select>
+              <div className="flex-1 min-w-0"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Language</p><p className="text-[11px] text-slate-500">English only for now — more languages are coming in a future update.</p></div>
+              <span className={`text-[11px] font-bold px-2 py-1 rounded-lg border ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}>English</span>
             </div>
 
             <div className={`p-3 rounded-xl border flex items-center gap-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>

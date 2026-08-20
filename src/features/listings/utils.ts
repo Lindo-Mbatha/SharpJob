@@ -116,3 +116,20 @@ export const getActiveJobs = (jobs: Job[], nowMs: number): Job[] => {
     return nowMs <= closedDate.getTime();
   });
 };
+
+export const sortJobsByDatePostedDesc = (jobs: Job[]): Job[] => {
+  return [...jobs].sort((a, b) => {
+    const aMs = new Date(a.datePosted).getTime();
+    const bMs = new Date(b.datePosted).getTime();
+    const aValid = !Number.isNaN(aMs);
+    const bValid = !Number.isNaN(bMs);
+    if (!aValid && !bValid) return 0;
+    if (!aValid) return 1;
+    if (!bValid) return -1;
+    return bMs - aMs;
+  });
+};
+
+export const sortJobsAlphabetically = (jobs: Job[]): Job[] => {
+  return [...jobs].sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }));
+};

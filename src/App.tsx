@@ -5,7 +5,7 @@ import { WifiOff } from "lucide-react";
 import { LISTINGS_PER_PAGE } from "./features/listings/constants";
 import { useJobs } from "./features/listings/useJobs";
 import { Job, PreviousSavedListing } from "./features/listings/types";
-import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings, parseJobCloseDate } from "./features/listings/utils";
+import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings, parseJobCloseDate, sortJobsAlphabetically, sortJobsByDatePostedDesc } from "./features/listings/utils";
 import { countAppliedJobs, countSavedVisible, paginateItems } from "./features/listings/selectors";
 import { HomeTabScreen } from "./features/tabs/HomeTabScreen";
 import { ExploreTabScreen } from "./features/tabs/ExploreTabScreen";
@@ -64,18 +64,6 @@ interface AccentStyle {
 }
 
 const ACCENTS: Record<string, AccentStyle> = {
-  indigo: {
-    primary: "bg-indigo-600",
-    text: "text-indigo-600",
-    textHover: "hover:text-indigo-700",
-    bgLight: "bg-indigo-50",
-    borderLight: "border-indigo-100",
-    borderHover: "hover:border-indigo-300",
-    borderActive: "border-indigo-600",
-    ring: "focus:ring-indigo-500",
-    badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
-    name: "Classic Indigo"
-  },
   blue: {
     primary: "bg-blue-600",
     text: "text-blue-600",
@@ -87,6 +75,18 @@ const ACCENTS: Record<string, AccentStyle> = {
     ring: "focus:ring-blue-500",
     badge: "bg-blue-50 text-blue-700 border-blue-100",
     name: "SharpJob Blue"
+  },
+  indigo: {
+    primary: "bg-indigo-600",
+    text: "text-indigo-600",
+    textHover: "hover:text-indigo-700",
+    bgLight: "bg-indigo-50",
+    borderLight: "border-indigo-100",
+    borderHover: "hover:border-indigo-300",
+    borderActive: "border-indigo-600",
+    ring: "focus:ring-indigo-500",
+    badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    name: "Classic Indigo"
   },
   emerald: {
     primary: "bg-emerald-600",
@@ -160,7 +160,6 @@ export default function App() {
     prefEmail,
     prefPush,
     settingHaptics,
-    settingLanguage,
     helpQuery,
     helpOpenFaq,
     feedbackText,
@@ -205,7 +204,6 @@ export default function App() {
     setPrefEmail,
     setPrefPush,
     setSettingHaptics,
-    setSettingLanguage,
     setHelpQuery,
     setHelpOpenFaq,
     setFeedbackText,
@@ -597,7 +595,6 @@ export default function App() {
   const {
     exploreQuery,
     exploreCategory,
-    exploreType,
     explorePage,
     isAdvSearchOpen,
     isAdvSearchApplied,
@@ -615,7 +612,6 @@ export default function App() {
   const {
     setExploreQuery,
     setExploreCategory,
-    setExploreType,
     setExplorePage,
     setAdvKeyword,
     setAdvLocation,
@@ -638,22 +634,25 @@ export default function App() {
   const filteredJobs = filterExploreJobs(activeJobs, {
     exploreQuery,
     exploreCategory,
-    exploreType,
     isAdvSearchApplied,
     advKeyword,
     advLocation,
     advExp,
     advTypes,
     advSalaryMin,
-    advSkills
+    advDate,
+    advSkills,
+    nowMs
   });
 
   const savedJobs = jobs.filter(job => job.isSaved);
   const previousSavedListings: PreviousSavedListing[] = getPreviousSavedListings(savedJobs, nowMs);
   const activeSavedJobs = getActiveSavedJobs(savedJobs, nowMs);
 
-  const homePagination = paginateItems(activeJobs, homePage, LISTINGS_PER_PAGE);
-  const explorePagination = paginateItems(filteredJobs, explorePage, LISTINGS_PER_PAGE);
+  const homeJobs = sortJobsByDatePostedDesc(activeJobs);
+  const homePagination = paginateItems(homeJobs, homePage, LISTINGS_PER_PAGE);
+  const sortedExploreJobs = sortJobsAlphabetically(filteredJobs);
+  const explorePagination = paginateItems(sortedExploreJobs, explorePage, LISTINGS_PER_PAGE);
   const savedPagination = paginateItems(activeSavedJobs, savedPage, LISTINGS_PER_PAGE);
 
   const savedVisibleCount = countSavedVisible(activeSavedJobs, previousSavedListings);
@@ -769,7 +768,7 @@ export default function App() {
       location: advLocation.trim() || "none",
       experience: advExp ?? "any",
       types_count: advTypes.length,
-      min_salary_k: advSalaryMin,
+      min_salary: advSalaryMin,
       date_posted: advDate,
       skills_count: advSkills.length
     });
@@ -982,7 +981,6 @@ export default function App() {
                   activeAccentPrimary={activeAccent.primary}
                   exploreQuery={exploreQuery}
                   exploreCategory={exploreCategory}
-                  exploreType={exploreType}
                   isAdvSearchApplied={isAdvSearchApplied}
                   filteredJobs={filteredJobs}
                   exploreJobsPage={explorePagination.pageItems}
@@ -991,7 +989,6 @@ export default function App() {
                   recentSearches={recentSearches}
                   setExploreQuery={setExploreQuery}
                   setExploreCategory={setExploreCategory}
-                  setExploreType={setExploreType}
                   onOpenAdvancedSearch={openAdvancedSearch}
                   onSelectJob={setSelectedJob}
                   onToggleSave={onToggleSaveTracked}
@@ -1096,7 +1093,6 @@ export default function App() {
                   prefEmail={prefEmail}
                   prefPush={prefPush}
                   settingHaptics={settingHaptics}
-                  settingLanguage={settingLanguage}
                   helpQuery={helpQuery}
                   helpOpenFaq={helpOpenFaq}
                   feedbackText={feedbackText}
@@ -1139,7 +1135,6 @@ export default function App() {
                   setPrefEmail={setPrefEmail}
                   setPrefPush={setPrefPush}
                   setSettingHaptics={setSettingHaptics}
-                  setSettingLanguage={setSettingLanguage}
                   setHelpQuery={setHelpQuery}
                   setHelpOpenFaq={setHelpOpenFaq}
                   setFeedbackText={setFeedbackText}

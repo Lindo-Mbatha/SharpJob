@@ -19,7 +19,7 @@ export interface AdvancedSearchAppliedPayload {
   location: string;
   experience: string;
   types_count: number;
-  min_salary_k: number;
+  min_salary: number;
   date_posted: string;
   skills_count: number;
 }

@@ -10,7 +10,6 @@ export function ExploreTabScreen({
   activeAccentPrimary,
   exploreQuery,
   exploreCategory,
-  exploreType,
   isAdvSearchApplied,
   filteredJobs,
   exploreJobsPage,
@@ -19,7 +18,6 @@ export function ExploreTabScreen({
   recentSearches,
   setExploreQuery,
   setExploreCategory,
-  setExploreType,
   onOpenAdvancedSearch,
   onSelectJob,
   onToggleSave,
@@ -37,7 +35,6 @@ export function ExploreTabScreen({
   activeAccentPrimary: string;
   exploreQuery: string;
   exploreCategory: string;
-  exploreType: string;
   isAdvSearchApplied: boolean;
   filteredJobs: Job[];
   exploreJobsPage: Job[];
@@ -46,7 +43,6 @@ export function ExploreTabScreen({
   recentSearches: string[];
   setExploreQuery: (value: string) => void;
   setExploreCategory: (value: string) => void;
-  setExploreType: (value: string) => void;
   onOpenAdvancedSearch: () => void;
   onSelectJob: (job: Job) => void;
   onToggleSave: (jobId: string, event: React.MouseEvent) => void;
@@ -77,6 +73,12 @@ export function ExploreTabScreen({
     moved: false
   });
   const suppressClickRef = React.useRef(false);
+
+  const jobsScrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    jobsScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [safeExplorePage]);
 
   const onHorizontalWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
@@ -269,47 +271,10 @@ export function ExploreTabScreen({
             );
           })}
         </div>
-
-        <div
-          className="flex items-center gap-1.5 overflow-x-scroll overflow-y-hidden no-scrollbar py-0.5 cursor-grab active:cursor-grabbing"
-          onWheel={onHorizontalWheel}
-          onPointerDown={onHorizontalPointerDown}
-          onPointerMove={onHorizontalPointerMove}
-          onPointerUp={onHorizontalPointerEnd}
-          onPointerCancel={onHorizontalPointerEnd}
-          onClickCapture={onHorizontalClickCapture}
-          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
-        >
-          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mr-1 shrink-0">Type:</span>
-          {[
-            { label: "All", value: "All" },
-            { label: "Permanent", value: "Permanent" },
-            { label: "Contract", value: "Contract" },
-            { label: "Remote", value: "Remote" },
-            { label: "Internship", value: "Internship" },
-            { label: "Hybrid", value: "Hybrid" },
-            { label: "Part-time", value: "Part-time" }
-          ].map(({ label, value }) => {
-            const isSelected = exploreType === value;
-            return (
-              <button
-                key={value}
-                onClick={() => setExploreType(value)}
-                className={`touch-target px-2 py-0.5 rounded text-[10px] font-medium transition-all whitespace-nowrap shrink-0 ${
-                  isSelected
-                    ? "bg-slate-800 text-white border-b-2 border-slate-400"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-1">
+        <div ref={jobsScrollRef} className="flex-1 min-h-0 overflow-y-auto no-scrollbar pr-1">
           <div className="space-y-4 pb-2">
             {filteredJobs.length > 0 ? (
               exploreJobsPage.map((job) => (
