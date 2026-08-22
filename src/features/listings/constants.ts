@@ -7,7 +7,7 @@ export const EXPERIENCE_SALARY_BANDS = {
 
 export const LISTINGS_PER_PAGE = 20;
 export const MS_IN_DAY = 24 * 60 * 60 * 1000;
-export const PREVIOUS_LISTING_RETENTION_DAYS = 30;
+export const PREVIOUS_LISTING_RETENTION_DAYS = 90;
 
 // The Advanced Search salary slider's floor. Left at this value it means
 // "no salary preference" — jobs with no salary listed in the database still

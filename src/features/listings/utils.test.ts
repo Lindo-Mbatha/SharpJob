@@ -44,7 +44,7 @@ describe("listings utils", () => {
     const jobs: Job[] = [
       { ...baseJob, id: "active", closes: "2000-01-20" },
       { ...baseJob, id: "previous", closes: "2000-01-01" },
-      { ...baseJob, id: "expired", closes: "1999-11-01" }
+      { ...baseJob, id: "expired", closes: "1999-08-01" }
     ];
 
     const activeSaved = getActiveSavedJobs(jobs, nowMs);

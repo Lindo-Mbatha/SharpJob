@@ -35,6 +35,15 @@ export const displayOrFallback = (value: string | null | undefined): string => {
   return value && value.trim() ? value : "Not provided";
 };
 
+export const formatStorageSize = (bytes: number): string => {
+  if (bytes <= 0) return "0 KB";
+  const KB = 1024;
+  const MB = KB * 1024;
+  if (bytes >= MB) return `${(bytes / MB).toFixed(2)} MB`;
+  if (bytes >= KB) return `${(bytes / KB).toFixed(1)} KB`;
+  return `${bytes} B`;
+};
+
 export const parseJobCloseDate = (closes: string): Date | null => {
   const parsed = new Date(closes);
   if (Number.isNaN(parsed.getTime())) return null;
@@ -111,6 +120,7 @@ export const getActiveSavedJobs = (savedJobs: Job[], nowMs: number): Job[] => {
 
 export const getActiveJobs = (jobs: Job[], nowMs: number): Job[] => {
   return jobs.filter(job => {
+    if (job.isRemovedFromSource) return false;
     const closedDate = parseJobCloseDate(job.closes);
     if (!closedDate) return true;
     return nowMs <= closedDate.getTime();

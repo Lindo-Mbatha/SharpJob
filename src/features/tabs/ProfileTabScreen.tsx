@@ -10,6 +10,7 @@ import {
   Compass,
   FileText,
   Globe,
+  HardDrive,
   LifeBuoy,
   Link2,
   Lock,
@@ -34,6 +35,7 @@ import {
 } from "lucide-react";
 import { CandidateStatus, FeedbackCategory, NotificationFrequency, PresencePreference, PresenceStatus, ThemeMode } from "../app/types/domain";
 import { resizeImageFileToDataUrl } from "../app/utils/image";
+import { formatStorageSize } from "../listings/utils";
 import { APP_VERSION } from "../../version";
 
 type IconCmp = React.ComponentType<{ className?: string }>;
@@ -121,6 +123,14 @@ function SettingsRow({
   );
 }
 
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6c0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64c0 3.33 2.76 5.7 5.69 5.7c3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" />
+    </svg>
+  );
+}
+
 function ReaderTopBar({ title, onBack, onBackLabel, right, dark, accentText }: { title: string; onBack: () => void; onBackLabel: string; right?: React.ReactNode; dark: boolean; accentText: string }) {
   return (
     <div className={`h-12 px-3 flex items-center justify-between border-b shrink-0 ${dark ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
@@ -145,6 +155,9 @@ export function ProfileTabScreen({
   accentColor,
   appliedJobsCount,
   savedVisibleCount,
+  previousListingsStorageBytes,
+  previousListingsCount,
+  onClearPreviousListings,
   profileStrengthLabel,
   profileSubScreen,
   applicantName,
@@ -250,6 +263,9 @@ export function ProfileTabScreen({
   accentColor: string;
   appliedJobsCount: number;
   savedVisibleCount: number;
+  previousListingsStorageBytes: number;
+  previousListingsCount: number;
+  onClearPreviousListings: () => void;
   profileStrengthLabel: string;
   profileSubScreen: ProfileSubScreen;
   applicantName: string;
@@ -962,6 +978,37 @@ export function ProfileTabScreen({
 
             <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
+            <div className={`p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><HardDrive className="h-4 w-4" /></div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Previous Listings storage</p>
+                  <p className="text-[11px] text-slate-500">Closed listings kept on this device in case they're removed from SharpJob.</p>
+                </div>
+                <span className={`text-[11px] font-bold px-2 py-1 rounded-lg border shrink-0 ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}>
+                  {formatStorageSize(previousListingsStorageBytes)}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={previousListingsCount === 0}
+                onClick={() => {
+                  const confirmed = confirm(
+                    `Clear all ${previousListingsCount} Previous Listings?\n\nThis permanently deletes every closed listing kept on this device — including their saved copies and interview trackers — and can't be undone.\n\nPrefer to keep some? You can delete listings one at a time from Previous Listings in the Saved tab instead.`
+                  );
+                  if (!confirmed) return;
+                  onClearPreviousListings();
+                }}
+                aria-label="Clear all Previous Listings data from this device"
+                className={`mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${darkMode ? "border-rose-900/60 text-rose-400 hover:bg-rose-950/40" : "border-rose-300 text-rose-600 hover:bg-rose-50"}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {previousListingsCount > 0 ? `Clear Data (${previousListingsCount})` : "Clear Data"}
+              </button>
+            </div>
+
+            <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
+
             <div className={`p-3 rounded-xl border flex items-center justify-between ${darkMode ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
               <span className="text-[11px] text-slate-500 font-semibold">App version</span>
               <span className="text-[11px] text-slate-400 font-bold">v{APP_VERSION}</span>
@@ -1155,6 +1202,24 @@ export function ProfileTabScreen({
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Follow us</p>
+                <div className="space-y-2">
+                  <button onClick={() => window.open("https://www.tiktok.com/@sharpjob", "_blank")} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
+                    <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${darkMode ? "bg-slate-800 text-white border-slate-700" : "bg-slate-900 text-white border-slate-900"}`}>
+                      <TikTokIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>TikTok</p>
+                      <p className="text-[11px] text-slate-500 truncate">@sharpjob</p>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 ${activeAccentText}`} />
+                  </button>
                 </div>
               </div>
 

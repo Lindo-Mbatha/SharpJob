@@ -4,6 +4,57 @@ import { PREVIOUS_LISTING_RETENTION_DAYS } from "../listings/constants";
 import { JobCard } from "../listings/components/JobCard";
 import { PaginationControls } from "../listings/components/PaginationControls";
 import { Job, PreviousSavedListing } from "../listings/types";
+import { formatStorageSize } from "../listings/utils";
+
+function InterviewTrackerCard({
+  job,
+  darkMode,
+  activeAccentText,
+  hint,
+  onUpdateInterviewTracker
+}: {
+  job: Job;
+  darkMode: boolean;
+  activeAccentText: string;
+  hint?: string;
+  onUpdateInterviewTracker: (jobId: string, status: NonNullable<Job["interviewTrackerStatus"]>, interviewDate?: string) => void;
+}) {
+  return (
+    <div className={`rounded-xl border p-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+      <div className="flex items-center gap-2">
+        <CalendarDays className={`h-4 w-4 shrink-0 ${activeAccentText}`} aria-hidden="true" />
+        <label htmlFor={`interview-status-${job.id}`} className={`text-[11px] font-bold ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
+          Interview tracker
+        </label>
+      </div>
+      {hint && <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{hint}</p>}
+      <select
+        id={`interview-status-${job.id}`}
+        value={job.interviewTrackerStatus ?? "waiting_response"}
+        onChange={(event) => onUpdateInterviewTracker(job.id, event.target.value as NonNullable<Job["interviewTrackerStatus"]>, job.interviewDate)}
+        className={`mt-2 w-full rounded-lg border px-2.5 py-2 text-xs font-semibold focus:outline-none ${darkMode ? "bg-slate-950 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-800"}`}
+      >
+        <option value="waiting_response">Waiting for a response</option>
+        <option value="waiting_date">Waiting for an interview date</option>
+        <option value="scheduled">I have an interview</option>
+      </select>
+      {job.interviewTrackerStatus === "scheduled" && (
+        <div className="mt-2">
+          <label htmlFor={`interview-date-${job.id}`} className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Interview date and time
+          </label>
+          <input
+            id={`interview-date-${job.id}`}
+            type="datetime-local"
+            value={job.interviewDate ?? ""}
+            onChange={(event) => onUpdateInterviewTracker(job.id, "scheduled", event.target.value)}
+            className={`w-full rounded-lg border px-2.5 py-2 text-xs focus:outline-none ${darkMode ? "bg-slate-950 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-800"}`}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SavedTabScreen({
   darkMode,
@@ -14,6 +65,7 @@ export function SavedTabScreen({
   safeSavedPage,
   savedTotalPages,
   previousSavedListings,
+  previousListingsStorageBytes,
   showPreviousListings,
   onToggleShowPreviousListings,
   onSelectJob,
@@ -23,6 +75,7 @@ export function SavedTabScreen({
   onSelectPage,
   onExploreListings,
   onExportListing,
+  onDeletePreviousListing,
   onUpdateInterviewTracker
 }: {
   darkMode: boolean;
@@ -33,6 +86,7 @@ export function SavedTabScreen({
   safeSavedPage: number;
   savedTotalPages: number;
   previousSavedListings: PreviousSavedListing[];
+  previousListingsStorageBytes: number;
   showPreviousListings: boolean;
   onToggleShowPreviousListings: () => void;
   onSelectJob: (job: Job) => void;
@@ -42,56 +96,30 @@ export function SavedTabScreen({
   onSelectPage: (page: number) => void;
   onExploreListings: () => void;
   onExportListing: (job: Job, archiveInfo: { closedDate: Date; expiresAt: Date }) => void;
+  onDeletePreviousListing: (jobId: string) => void;
   onUpdateInterviewTracker: (jobId: string, status: NonNullable<Job["interviewTrackerStatus"]>, interviewDate?: string) => void;
 }) {
   const savedForLaterJobs = savedJobsPage.filter(job => !job.isApplied);
   const appliedSavedJobs = savedJobsPage.filter(job => job.isApplied);
 
   const renderSavedJob = (job: Job) => (
-    <div key={job.id} className="space-y-2">
-      <JobCard
-        job={job}
-        darkMode={darkMode}
-        activeAccentText={activeAccentText}
-        variant="saved"
-        onSelect={onSelectJob}
-        onToggleSave={onToggleSave}
-      />
-      {job.isApplied && (
-        <div className={`rounded-xl border p-3 ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
-          <div className="flex items-center gap-2">
-            <CalendarDays className={`h-4 w-4 shrink-0 ${activeAccentText}`} aria-hidden="true" />
-            <label htmlFor={`interview-status-${job.id}`} className={`text-[11px] font-bold ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
-              Interview tracker
-            </label>
-          </div>
-          <select
-            id={`interview-status-${job.id}`}
-            value={job.interviewTrackerStatus ?? "waiting_response"}
-            onChange={(event) => onUpdateInterviewTracker(job.id, event.target.value as NonNullable<Job["interviewTrackerStatus"]>, job.interviewDate)}
-            className={`mt-2 w-full rounded-lg border px-2.5 py-2 text-xs font-semibold focus:outline-none ${darkMode ? "bg-slate-950 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-800"}`}
-          >
-            <option value="waiting_response">Waiting for a response</option>
-            <option value="waiting_date">Waiting for an interview date</option>
-            <option value="scheduled">I have an interview</option>
-          </select>
-          {job.interviewTrackerStatus === "scheduled" && (
-            <div className="mt-2">
-              <label htmlFor={`interview-date-${job.id}`} className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Interview date and time
-              </label>
-              <input
-                id={`interview-date-${job.id}`}
-                type="datetime-local"
-                value={job.interviewDate ?? ""}
-                onChange={(event) => onUpdateInterviewTracker(job.id, "scheduled", event.target.value)}
-                className={`w-full rounded-lg border px-2.5 py-2 text-xs focus:outline-none ${darkMode ? "bg-slate-950 border-slate-700 text-white" : "bg-white border-slate-300 text-slate-800"}`}
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <JobCard
+      key={job.id}
+      job={job}
+      darkMode={darkMode}
+      activeAccentText={activeAccentText}
+      variant="saved"
+      onSelect={onSelectJob}
+      onToggleSave={onToggleSave}
+      footer={job.isApplied ? (
+        <InterviewTrackerCard
+          job={job}
+          darkMode={darkMode}
+          activeAccentText={activeAccentText}
+          onUpdateInterviewTracker={onUpdateInterviewTracker}
+        />
+      ) : undefined}
+    />
   );
 
   return (
@@ -138,7 +166,7 @@ export function SavedTabScreen({
             <p className="text-sm font-semibold">No active saved jobs right now</p>
             <p className="text-xs text-slate-500 mt-1">
               {previousSavedListings.length > 0
-                ? "Any closed roles are available below in Previous Listings for up to 30 days."
+                ? `Any closed roles are available below in Previous Listings for up to ${PREVIOUS_LISTING_RETENTION_DAYS} days.`
                 : "Tap the bookmark icon on any job card to save roles you love."}
             </p>
             <button
@@ -187,7 +215,10 @@ export function SavedTabScreen({
           {showPreviousListings && (
             <div className={`px-3 pb-3 space-y-2 border-t ${darkMode ? "border-slate-800" : "border-slate-200"}`}>
               <div className={`mt-2 rounded-lg border px-2.5 py-2 text-[10px] font-semibold leading-relaxed ${darkMode ? "border-rose-900/60 bg-rose-950/40 text-rose-300" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
-                Warning: Closed listings are automatically removed from this section 30 days after the close date. Export any listing you may still need before it expires.
+                Warning: Closed listings are automatically removed from this section {PREVIOUS_LISTING_RETENTION_DAYS} days after the close date. Export any listing you may still need before it expires.
+                {previousSavedListings.length > 0 && (
+                  <> These {previousSavedListings.length} listing{previousSavedListings.length === 1 ? "" : "s"} are using about {formatStorageSize(previousListingsStorageBytes)} of storage on this device — see Profile &gt; App Settings for the full breakdown.</>
+                )}
               </div>
 
               {previousSavedListings.length === 0 ? (
@@ -218,19 +249,53 @@ export function SavedTabScreen({
                       <p className="text-[10px] text-slate-500 mt-0.5">
                         Closed on {closedDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} • expires in {daysUntilArchive} day{daysUntilArchive === 1 ? "" : "s"}
                       </p>
+                      {job.isRemovedFromSource && (
+                        <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-0.5">
+                          No longer available on SharpJob — showing your saved copy.
+                        </p>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onExportListing(job, { closedDate, expiresAt });
-                      }}
-                      aria-label={`Export ${job.title} as a text file`}
-                      className={`shrink-0 px-2 py-1 rounded-md border text-[10px] font-bold transition-colors ${darkMode ? "border-slate-700 text-slate-200 hover:bg-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-100"}`}
-                    >
-                      Export TXT
-                    </button>
+                    <div className="flex shrink-0 flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onExportListing(job, { closedDate, expiresAt });
+                        }}
+                        aria-label={`Export ${job.title} as a text file`}
+                        className={`px-2 py-1 rounded-md border text-[10px] font-bold transition-colors ${darkMode ? "border-slate-700 text-slate-200 hover:bg-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-100"}`}
+                      >
+                        Export TXT
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const confirmMessage = job.isApplied
+                            ? `Delete "${job.title}" from Previous Listings? This also clears its interview tracker and can't be undone.`
+                            : `Delete "${job.title}" from Previous Listings? This can't be undone.`;
+                          if (window.confirm(confirmMessage)) {
+                            onDeletePreviousListing(job.id);
+                          }
+                        }}
+                        aria-label={`Delete ${job.title} from previous listings`}
+                        className={`px-2 py-1 rounded-md border text-[10px] font-bold transition-colors ${darkMode ? "border-rose-900/60 text-rose-400 hover:bg-rose-950/40" : "border-rose-300 text-rose-600 hover:bg-rose-50"}`}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
+                  {job.isApplied && (
+                    <div className="mt-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                      <InterviewTrackerCard
+                        job={job}
+                        darkMode={darkMode}
+                        activeAccentText={activeAccentText}
+                        hint="Interviews can still be scheduled after a role's closing date — keep this updated if you hear back."
+                        onUpdateInterviewTracker={onUpdateInterviewTracker}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

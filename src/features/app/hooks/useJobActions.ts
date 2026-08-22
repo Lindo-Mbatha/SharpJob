@@ -135,6 +135,76 @@ export function useJobActions({
     }
   };
 
+  const handleDeletePreviousListing = (jobId: string) => {
+    let deletedTitle: string | null = null;
+
+    setJobs(prevJobs =>
+      prevJobs.map(job => {
+        if (job.id !== jobId) return job;
+        deletedTitle = job.title;
+        return {
+          ...job,
+          isSaved: false,
+          isApplied: false,
+          appliedStatus: undefined,
+          appliedDate: undefined,
+          interviewTrackerStatus: undefined,
+          interviewDate: undefined
+        };
+      })
+    );
+
+    if (deletedTitle) {
+      triggerNotification(`Deleted "${deletedTitle}" from Previous Listings.`);
+    }
+
+    if (selectedJob && selectedJob.id === jobId) {
+      setSelectedJob(prev => prev ? {
+        ...prev,
+        isSaved: false,
+        isApplied: false,
+        appliedStatus: undefined,
+        appliedDate: undefined,
+        interviewTrackerStatus: undefined,
+        interviewDate: undefined
+      } : null);
+    }
+  };
+
+  const handleClearPreviousListings = (jobIds: string[]) => {
+    if (jobIds.length === 0) return;
+    const idSet = new Set(jobIds);
+
+    setJobs(prevJobs =>
+      prevJobs.map(job => {
+        if (!idSet.has(job.id)) return job;
+        return {
+          ...job,
+          isSaved: false,
+          isApplied: false,
+          appliedStatus: undefined,
+          appliedDate: undefined,
+          interviewTrackerStatus: undefined,
+          interviewDate: undefined
+        };
+      })
+    );
+
+    triggerNotification(`Cleared ${jobIds.length} listing${jobIds.length === 1 ? "" : "s"} from Previous Listings.`);
+
+    if (selectedJob && idSet.has(selectedJob.id)) {
+      setSelectedJob(prev => prev ? {
+        ...prev,
+        isSaved: false,
+        isApplied: false,
+        appliedStatus: undefined,
+        appliedDate: undefined,
+        interviewTrackerStatus: undefined,
+        interviewDate: undefined
+      } : null);
+    }
+  };
+
   const exportListingToText = (job: Job, archiveInfo?: { closedDate: Date; expiresAt: Date }) => {
     try {
       const lines = [
@@ -201,6 +271,8 @@ export function useJobActions({
       handleApplyOutbound,
       confirmAppliedOnSite,
       handleToggleSave,
+      handleDeletePreviousListing,
+      handleClearPreviousListings,
       exportListingToText
     }
   };

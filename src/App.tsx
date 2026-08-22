@@ -6,7 +6,7 @@ import { LISTINGS_PER_PAGE } from "./features/listings/constants";
 import { useJobs } from "./features/listings/useJobs";
 import { Job, PreviousSavedListing } from "./features/listings/types";
 import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings, parseJobCloseDate, sortJobsAlphabetically, sortJobsByDatePostedDesc } from "./features/listings/utils";
-import { countAppliedJobs, countSavedVisible, paginateItems } from "./features/listings/selectors";
+import { countAppliedJobs, countSavedVisible, getPreviousListingsStorageBytes, paginateItems } from "./features/listings/selectors";
 import { HomeTabScreen } from "./features/tabs/HomeTabScreen";
 import { ExploreTabScreen } from "./features/tabs/ExploreTabScreen";
 import { SavedTabScreen } from "./features/tabs/SavedTabScreen";
@@ -518,19 +518,41 @@ export default function App() {
           const persistedJobs = JSON.parse(storedJobState) as Array<Partial<Job> & { id?: string }>;
           const persistedById = new Map(persistedJobs.filter((job): job is Partial<Job> & { id: string } => typeof job.id === "string").map(job => [job.id, job]));
 
-          setJobs(previous => previous.map(job => {
-            const persisted = persistedById.get(job.id);
-            if (!persisted) return job;
-            return {
-              ...job,
-              isSaved: Boolean(persisted.isSaved),
-              isApplied: Boolean(persisted.isApplied),
-              appliedStatus: persisted.appliedStatus,
-              appliedDate: persisted.appliedDate,
-              interviewTrackerStatus: persisted.interviewTrackerStatus,
-              interviewDate: persisted.interviewDate
-            };
-          }));
+          setJobs(previous => {
+            const liveIds = new Set(previous.map(job => job.id));
+
+            const merged = previous.map(job => {
+              const persisted = persistedById.get(job.id);
+              if (!persisted) return job;
+              return {
+                ...job,
+                isSaved: Boolean(persisted.isSaved),
+                isApplied: Boolean(persisted.isApplied),
+                appliedStatus: persisted.appliedStatus,
+                appliedDate: persisted.appliedDate,
+                interviewTrackerStatus: persisted.interviewTrackerStatus,
+                interviewDate: persisted.interviewDate
+              };
+            });
+
+            // A job saved/applied in a previous session may already be gone from this
+            // session's fresh database fetch (deleted row, etc). Restore it from the
+            // locally cached snapshot so it doesn't vanish from Saved Jobs on reload.
+            persistedById.forEach((persisted, id) => {
+              if (liveIds.has(id)) return;
+              if (!persisted.isSaved && !persisted.isApplied) return;
+              if (!persisted.title) return; // older cache format only stored flags, no content to restore
+
+              merged.push({
+                ...(persisted as Job),
+                isSaved: Boolean(persisted.isSaved),
+                isApplied: Boolean(persisted.isApplied),
+                isRemovedFromSource: true
+              });
+            });
+
+            return merged;
+          });
         }
 
         if (storedResumeSelection) {
@@ -553,15 +575,11 @@ export default function App() {
   useEffect(() => {
     if (!hasHydratedDurableStateRef.current) return;
 
-    const persistedJobs = jobs.map(job => ({
-      id: job.id,
-      isSaved: Boolean(job.isSaved),
-      isApplied: Boolean(job.isApplied),
-      appliedStatus: job.appliedStatus,
-      appliedDate: job.appliedDate,
-      interviewTrackerStatus: job.interviewTrackerStatus,
-      interviewDate: job.interviewDate
-    }));
+    // Persist the full job content — not just the saved/applied flags — for saved or
+    // applied jobs, so their listing details survive a reload even if the source row
+    // is later deleted from the database. Jobs that are neither saved nor applied
+    // don't need a local copy; they're always re-fetched live.
+    const persistedJobs = jobs.filter(job => job.isSaved || job.isApplied);
 
     void writeStoredValue(JOB_STATE_KEY, JSON.stringify(persistedJobs));
   }, [jobs]);
@@ -584,6 +602,8 @@ export default function App() {
     handleApplyOutbound,
     confirmAppliedOnSite,
     handleToggleSave,
+    handleDeletePreviousListing,
+    handleClearPreviousListings,
     exportListingToText
   } = jobActionActions;
 
@@ -657,6 +677,7 @@ export default function App() {
 
   const savedVisibleCount = countSavedVisible(activeSavedJobs, previousSavedListings);
   const appliedJobsCount = countAppliedJobs(jobs);
+  const previousListingsStorageBytes = getPreviousListingsStorageBytes(previousSavedListings);
 
   useEffect(() => {
     setHomePage(prev => Math.min(prev, homePagination.totalPages));
@@ -739,6 +760,21 @@ export default function App() {
       next_saved_state: target?.isSaved ? "unsave" : "save"
     });
     handleToggleSave(jobId);
+  };
+
+  const onDeletePreviousListingTracked = (jobId: string) => {
+    const target = jobs.find(job => job.id === jobId);
+    trackEvent("job_delete_previous_listing", {
+      job_id: jobId,
+      was_applied: Boolean(target?.isApplied)
+    });
+    handleDeletePreviousListing(jobId);
+  };
+
+  const onClearPreviousListingsTracked = () => {
+    const jobIds = previousSavedListings.map(entry => entry.job.id);
+    trackEvent("job_clear_previous_listings", { count: jobIds.length });
+    handleClearPreviousListings(jobIds);
   };
 
   const onApplyOutboundTracked = (job: Job, mode: ApplyOutboundMode) => {
@@ -1015,6 +1051,7 @@ export default function App() {
                   safeSavedPage={savedPagination.safePage}
                   savedTotalPages={savedPagination.totalPages}
                   previousSavedListings={previousSavedListings}
+                  previousListingsStorageBytes={previousListingsStorageBytes}
                   showPreviousListings={showPreviousListings}
                   onToggleShowPreviousListings={() => setShowPreviousListings(prev => !prev)}
                   onSelectJob={setSelectedJob}
@@ -1024,6 +1061,7 @@ export default function App() {
                   onSelectPage={setSavedPage}
                   onExploreListings={() => switchTab("explore")}
                   onExportListing={exportListingToText}
+                  onDeletePreviousListing={onDeletePreviousListingTracked}
                   onUpdateInterviewTracker={onUpdateInterviewTracker}
                 />
               )}
@@ -1061,6 +1099,9 @@ export default function App() {
                   accentColor={accentColor}
                   appliedJobsCount={appliedJobsCount}
                   savedVisibleCount={savedVisibleCount}
+                  previousListingsStorageBytes={previousListingsStorageBytes}
+                  previousListingsCount={previousSavedListings.length}
+                  onClearPreviousListings={onClearPreviousListingsTracked}
                   profileStrengthLabel={profileStrengthLabel}
                   profileSubScreen={profileSubScreen}
                   applicantName={applicantName}

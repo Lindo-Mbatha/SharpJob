@@ -20,6 +20,9 @@ export interface Job {
   interviewTrackerStatus?: "waiting_response" | "waiting_date" | "scheduled";
   interviewDate?: string;
   applyUrl?: string;
+  /** True when this job no longer exists in the live database but is kept
+   * around locally because the user saved or applied to it. */
+  isRemovedFromSource?: boolean;
 }
 
 export interface PreviousSavedListing {

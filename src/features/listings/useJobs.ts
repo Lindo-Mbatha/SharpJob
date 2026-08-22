@@ -75,8 +75,9 @@ export function useJobs() {
     const mapped = rows.map(row => mapRow(row));
     setJobs(previousJobs => {
       const localStateByJobId = new Map(previousJobs.map(job => [job.id, job]));
+      const liveIds = new Set(mapped.map(job => job.id));
 
-      return mapped.map(job => {
+      const merged = mapped.map(job => {
         const localJob = localStateByJobId.get(job.id);
         if (!localJob) return job;
 
@@ -87,9 +88,21 @@ export function useJobs() {
           appliedStatus: localJob.appliedStatus,
           appliedDate: localJob.appliedDate,
           interviewTrackerStatus: localJob.interviewTrackerStatus,
-          interviewDate: localJob.interviewDate
+          interviewDate: localJob.interviewDate,
+          isRemovedFromSource: false
         };
       });
+
+      // A saved or applied job that no longer comes back from the database (e.g. its
+      // row was deleted) stays in local state instead of silently disappearing —
+      // Saved Jobs is the user's own record, not just a view onto the live table.
+      previousJobs.forEach(localJob => {
+        if (!liveIds.has(localJob.id) && (localJob.isSaved || localJob.isApplied)) {
+          merged.push({ ...localJob, isRemovedFromSource: true });
+        }
+      });
+
+      return merged;
     });
   }, []);
 

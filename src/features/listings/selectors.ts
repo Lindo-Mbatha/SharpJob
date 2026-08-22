@@ -22,3 +22,13 @@ export function countAppliedJobs(jobs: Job[]): number {
 export function countSavedVisible(activeSavedJobs: Job[], previousSavedListings: PreviousSavedListing[]): number {
   return activeSavedJobs.length + previousSavedListings.length;
 }
+
+// Estimated on-device storage (in bytes) used by the cached Previous Listings snapshots.
+export function getPreviousListingsStorageBytes(previousSavedListings: PreviousSavedListing[]): number {
+  if (previousSavedListings.length === 0) return 0;
+  try {
+    return new TextEncoder().encode(JSON.stringify(previousSavedListings.map(entry => entry.job))).length;
+  } catch {
+    return 0;
+  }
+}

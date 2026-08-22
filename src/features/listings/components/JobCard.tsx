@@ -1,5 +1,5 @@
 import React from "react";
-import { Banknote, Bookmark, Briefcase, Calendar, CheckCircle, ChevronRight, MapPin, Trash2 } from "lucide-react";
+import { AlertTriangle, Banknote, Bookmark, Briefcase, Calendar, CheckCircle, ChevronRight, MapPin, Trash2 } from "lucide-react";
 import { Job } from "../types";
 import { displayOrFallback, getCategoryStyles } from "../utils";
 
@@ -45,7 +45,8 @@ export function JobCard({
   activeAccentText,
   variant = "default",
   onSelect,
-  onToggleSave
+  onToggleSave,
+  footer
 }: {
   job: Job;
   darkMode: boolean;
@@ -53,6 +54,7 @@ export function JobCard({
   variant?: JobCardVariant;
   onSelect: (job: Job) => void;
   onToggleSave: (jobId: string, event: React.MouseEvent) => void;
+  footer?: React.ReactNode;
 }) {
   const catStyle = getCategoryStyles(job.category);
   const CatIcon = catStyle.icon;
@@ -139,7 +141,12 @@ export function JobCard({
       <div className={`border-t my-3 ${darkMode ? "border-slate-800" : "border-slate-100"}`} />
 
       <div className="flex items-center justify-between gap-2">
-        {job.isApplied ? (
+        {job.isRemovedFromSource ? (
+          <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>No longer listed — saved copy</span>
+          </div>
+        ) : job.isApplied ? (
           <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider animate-fade-in">
             <CheckCircle className="h-3.5 w-3.5" />
             <span className="truncate">Applied{job.appliedDate ? ` · ${job.appliedDate}` : ""}</span>
@@ -155,6 +162,16 @@ export function JobCard({
           <ChevronRight className="h-3.5 w-3.5" />
         </span>
       </div>
+
+      {footer && (
+        <div
+          className={`mt-3 pt-3 border-t ${darkMode ? "border-slate-800" : "border-slate-100"}`}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          {footer}
+        </div>
+      )}
     </div>
   );
 }
