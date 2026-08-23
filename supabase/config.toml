@@ -1,0 +1,2 @@
+[functions.notify-new-job]
+verify_jwt = false

@@ -43,6 +43,8 @@ import { filterExploreJobs } from "./features/explore/selectors";
 import { deriveProfileStrength } from "./features/profile/selectors";
 import { triggerHapticFeedback } from "./features/app/monitoring/haptics";
 import { notifyDevice, scheduleClosingDateReminders, scheduleInterviewReminders } from "./features/app/monitoring/deviceNotifications";
+import { registerForPushNotifications, unregisterFromPushNotifications } from "./features/app/monitoring/pushNotifications";
+import { syncPushTokenToSupabase, deactivatePushToken } from "./features/app/monitoring/pushSubscriptions";
 import { getNotificationDeliveryTime } from "./features/app/monitoring/notificationDelivery";
 
 const SEEN_JOB_IDS_KEY = "sharpjob.jobs.seen.v1";
@@ -267,6 +269,7 @@ export default function App() {
   const [homePage, setHomePage] = useState<number>(1);
   const [savedPage, setSavedPage] = useState<number>(1);
   const [showPreviousListings, setShowPreviousListings] = useState<boolean>(false);
+  const [pushToggleStatus, setPushToggleStatus] = useState<"idle" | "registering" | "disabling">("idle");
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -327,6 +330,28 @@ export default function App() {
 
     window.setTimeout(deliver, delay);
     if (hasDeferredDeviceNotification) void notifyDevice("SharpJob", message, deliveryTime);
+  };
+
+  const handleTogglePush = async (nextValue: boolean) => {
+    if (pushToggleStatus !== "idle") return;
+    setPushToggleStatus(nextValue ? "registering" : "disabling");
+
+    try {
+      if (nextValue) {
+        const token = await registerForPushNotifications();
+        if (token) {
+          setPrefPush(true);
+          void syncPushTokenToSupabase(token, exploreCategory, advLocation, advTypes);
+        } else {
+          triggerNotification("Push notifications permission was denied. Enable notifications in your device settings to turn this on.", "system");
+        }
+      } else {
+        await Promise.allSettled([deactivatePushToken(), unregisterFromPushNotifications()]);
+        setPrefPush(false);
+      }
+    } finally {
+      setPushToggleStatus("idle");
+    }
   };
 
   useEffect(() => {
@@ -1133,6 +1158,8 @@ export default function App() {
                   prefQuietTo={prefQuietTo}
                   prefEmail={prefEmail}
                   prefPush={prefPush}
+                  pushToggleBusy={pushToggleStatus !== "idle"}
+                  pushToggleBusyLabel={pushToggleStatus === "registering" ? "Registering…" : pushToggleStatus === "disabling" ? "Turning off…" : undefined}
                   settingHaptics={settingHaptics}
                   helpQuery={helpQuery}
                   helpOpenFaq={helpOpenFaq}
@@ -1174,7 +1201,7 @@ export default function App() {
                   setPrefQuietFrom={setPrefQuietFrom}
                   setPrefQuietTo={setPrefQuietTo}
                   setPrefEmail={setPrefEmail}
-                  setPrefPush={setPrefPush}
+                  onTogglePush={handleTogglePush}
                   setSettingHaptics={setSettingHaptics}
                   setHelpQuery={setHelpQuery}
                   setHelpOpenFaq={setHelpOpenFaq}

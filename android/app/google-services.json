@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "68896598516",
+    "project_id": "sharpjob-6a77d",
+    "storage_bucket": "sharpjob-6a77d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:68896598516:android:de9439dca6373327bd71a1",
+        "android_client_info": {
+          "package_name": "com.player99inc.sharpjob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3ircS8TiESs3yGACN45aUMok2Z6w8aH8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

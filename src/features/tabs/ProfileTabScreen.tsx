@@ -56,14 +56,15 @@ export interface ResumeVersion {
   active: boolean;
 }
 
-function Toggle({ on, onChange, accentBg, dark, label }: { on: boolean; onChange: () => void; accentBg: string; dark: boolean; label: string }) {
+function Toggle({ on, onChange, accentBg, dark, label, disabled }: { on: boolean; onChange: () => void; accentBg: string; dark: boolean; label: string; disabled?: boolean }) {
   return (
     <button
       type="button"
       onClick={onChange}
+      disabled={disabled}
       aria-pressed={on}
       aria-label={`${label}: ${on ? "on" : "off"}`}
-      className={`touch-target relative inline-flex h-5 w-9 shrink-0 items-center justify-start rounded-full transition-colors duration-200 ${
+      className={`touch-target relative inline-flex h-5 w-9 shrink-0 items-center justify-start rounded-full transition-colors duration-200 ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${
         on ? accentBg : (dark ? "bg-slate-700" : "bg-slate-300")
       }`}
     >
@@ -189,6 +190,8 @@ export function ProfileTabScreen({
   prefQuietTo,
   prefEmail,
   prefPush,
+  pushToggleBusy,
+  pushToggleBusyLabel,
   settingHaptics,
   helpQuery,
   helpOpenFaq,
@@ -230,7 +233,7 @@ export function ProfileTabScreen({
   setPrefQuietFrom,
   setPrefQuietTo,
   setPrefEmail,
-  setPrefPush,
+  onTogglePush,
   setSettingHaptics,
   setHelpQuery,
   setHelpOpenFaq,
@@ -297,6 +300,8 @@ export function ProfileTabScreen({
   prefQuietTo: string;
   prefEmail: boolean;
   prefPush: boolean;
+  pushToggleBusy: boolean;
+  pushToggleBusyLabel?: string;
   settingHaptics: boolean;
   helpQuery: string;
   helpOpenFaq: string | null;
@@ -338,7 +343,7 @@ export function ProfileTabScreen({
   setPrefQuietFrom: React.Dispatch<React.SetStateAction<string>>;
   setPrefQuietTo: React.Dispatch<React.SetStateAction<string>>;
   setPrefEmail: React.Dispatch<React.SetStateAction<boolean>>;
-  setPrefPush: React.Dispatch<React.SetStateAction<boolean>>;
+  onTogglePush: (next: boolean) => void;
   setSettingHaptics: React.Dispatch<React.SetStateAction<boolean>>;
   setHelpQuery: React.Dispatch<React.SetStateAction<string>>;
   setHelpOpenFaq: React.Dispatch<React.SetStateAction<string | null>>;
@@ -699,7 +704,7 @@ export function ProfileTabScreen({
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Headline</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Headline (Job Position)</label>
                 <input value={applicantHeadline} onChange={e => setApplicantHeadline(e.target.value)} placeholder="e.g. Product Designer" className={`w-full text-xs px-3 py-2 rounded-xl border focus:outline-none focus:ring-1 ${darkMode ? "bg-slate-900 border-slate-800 text-white focus:border-slate-700" : "bg-slate-50 border-slate-200 text-slate-800 focus:border-slate-300"}`} />
               </div>
               <div>
@@ -895,10 +900,17 @@ export function ProfileTabScreen({
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Channels</label>
               <div className="space-y-2">
-                <button onClick={() => setPrefPush(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+                <button
+                  onClick={() => onTogglePush(!prefPush)}
+                  disabled={pushToggleBusy}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${pushToggleBusy ? "opacity-70 cursor-not-allowed" : ""} ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}
+                >
                   <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><Bell className="h-4 w-4" /></div>
-                  <div className="flex-1"><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Push notifications</p><p className="text-[11px] text-slate-500">On this device.</p></div>
-                  <Toggle label="Push notifications" on={prefPush} onChange={() => setPrefPush(v => !v)} accentBg={activeAccentPrimary} dark={darkMode} />
+                  <div className="flex-1">
+                    <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Push notifications</p>
+                    <p className="text-[11px] text-slate-500">{pushToggleBusy ? pushToggleBusyLabel : "On this device."}</p>
+                  </div>
+                  <Toggle label="Push notifications" on={prefPush} onChange={() => onTogglePush(!prefPush)} accentBg={activeAccentPrimary} dark={darkMode} disabled={pushToggleBusy} />
                 </button>
                 <button onClick={() => setPrefEmail(v => !v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
                   <div className="w-9 h-9 rounded-lg border bg-sky-50 text-sky-600 border-sky-100 flex items-center justify-center shrink-0"><Mail className="h-4 w-4" /></div>
