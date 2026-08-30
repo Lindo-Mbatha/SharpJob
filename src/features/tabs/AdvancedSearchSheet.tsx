@@ -71,7 +71,7 @@ export function AdvancedSearchSheet({
   return (
     <div className="absolute inset-0 z-50 flex flex-col">
       <div className="absolute inset-0 bg-black/60 animate-fade-in" onClick={onClose} />
-      <div className={`absolute bottom-0 left-0 right-0 max-h-[85%] rounded-t-3xl flex flex-col animate-slide-up shadow-2xl ${
+      <div className={`absolute bottom-0 left-0 right-0 max-h-[85%] pb-[env(safe-area-inset-bottom)] rounded-t-3xl flex flex-col animate-slide-up shadow-2xl ${
         darkMode ? "bg-slate-950 border-t border-slate-800" : "bg-white border-t border-slate-200"
       }`}>
         <div className={`flex items-center justify-between p-4 border-b shrink-0 ${

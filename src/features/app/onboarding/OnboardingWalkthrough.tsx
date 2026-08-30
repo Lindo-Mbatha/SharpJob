@@ -141,7 +141,7 @@ export function OnboardingWalkthrough({
   };
 
   const cardPositionClass = spotlightRect
-    ? `absolute left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[320px] ${isMobileView ? "bottom-24" : "bottom-20"}`
+    ? `absolute left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-[320px] ${isMobileView ? "bottom-[calc(6rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]"}`
     : "flex-1 flex items-center justify-center px-6";
 
   return (
@@ -168,7 +168,7 @@ export function OnboardingWalkthrough({
       )}
 
       {!isLastStep && (
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 z-10">
           <button
             type="button"
             onClick={skip}

@@ -58,7 +58,7 @@ export function HomeTabScreen({
 
         <div>
           <h2 className={`text-2xl font-bold tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
-            Find your dream job
+            Find your Sharp Job
           </h2>
           <p className={`text-xs mt-0.5 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
             {activeJobsCount} jobs available for you.

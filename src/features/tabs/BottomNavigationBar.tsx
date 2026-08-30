@@ -37,7 +37,7 @@ export function BottomNavigationBar({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 ${isMobileView ? "h-20" : "h-16"} border-t flex items-center justify-around select-none z-30 transition-all ${
+      className={`absolute bottom-0 left-0 right-0 ${isMobileView ? "min-h-20" : "min-h-16"} pb-[env(safe-area-inset-bottom)] border-t flex items-center justify-around select-none z-30 transition-all ${
         darkMode
           ? "bg-slate-950 border-slate-900 text-slate-400"
           : "bg-white border-slate-200/60 text-slate-500"

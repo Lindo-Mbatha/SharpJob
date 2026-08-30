@@ -60,7 +60,7 @@ export function ApplyWizardSheet({
     <div className={`absolute inset-0 z-50 flex flex-col animate-slide-up ${
       darkMode ? "bg-slate-950 text-slate-100" : "bg-white text-slate-800"
     }`}>
-      <div className={`h-12 px-4 flex items-center justify-between border-b shrink-0 ${
+      <div className={`min-h-12 pt-[env(safe-area-inset-top)] px-4 flex items-center justify-between border-b shrink-0 ${
         darkMode ? "bg-slate-900 border-slate-850" : "bg-slate-50 border-slate-100"
       }`}>
         <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export function ApplyWizardSheet({
         )}
       </div>
 
-      <div className={`p-4 border-t flex items-center justify-between shrink-0 ${
+      <div className={`p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t flex items-center justify-between shrink-0 ${
         darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-150"
       }`}>
         {applyStep < 4 ? (

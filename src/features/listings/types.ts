@@ -12,6 +12,7 @@ export interface Job {
   responsibilities: string[];
   requirements: string[];
   companyBio: string;
+  whereToApply?: string;
   companyLogoUrl?: string;
   isSaved?: boolean;
   isApplied?: boolean;

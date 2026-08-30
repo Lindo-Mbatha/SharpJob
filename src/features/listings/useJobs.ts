@@ -34,6 +34,7 @@ function mapRow(row: Record<string, unknown>): Job {
     responsibilities: parseTextToArray(row.responsibilities),
     requirements: parseTextToArray(row.requirements),
     companyBio: String(row.about_company ?? ""),
+    whereToApply: row.where_to_apply ? String(row.where_to_apply) : undefined,
     companyLogoUrl: row.company_logo_url ? String(row.company_logo_url) : undefined,
     applyUrl: row.apply_url ? String(row.apply_url) : undefined,
   };

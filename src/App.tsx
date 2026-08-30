@@ -45,6 +45,8 @@ import { triggerHapticFeedback } from "./features/app/monitoring/haptics";
 import { notifyDevice, scheduleClosingDateReminders, scheduleInterviewReminders } from "./features/app/monitoring/deviceNotifications";
 import { registerForPushNotifications, unregisterFromPushNotifications } from "./features/app/monitoring/pushNotifications";
 import { syncPushTokenToSupabase, deactivatePushToken } from "./features/app/monitoring/pushSubscriptions";
+import { addHardwareBackButtonListener, exitNativeApp } from "./features/app/monitoring/hardwareBack";
+import { syncStatusBarStyle } from "./features/app/monitoring/statusBar";
 import { getNotificationDeliveryTime } from "./features/app/monitoring/notificationDelivery";
 
 const SEEN_JOB_IDS_KEY = "sharpjob.jobs.seen.v1";
@@ -270,6 +272,9 @@ export default function App() {
   const [savedPage, setSavedPage] = useState<number>(1);
   const [showPreviousListings, setShowPreviousListings] = useState<boolean>(false);
   const [pushToggleStatus, setPushToggleStatus] = useState<"idle" | "registering" | "disabling">("idle");
+  const [showExitHint, setShowExitHint] = useState<boolean>(false);
+  const exitHintTimerRef = useRef<number | null>(null);
+  const handleHardwareBackRef = useRef<() => void>(() => {});
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -920,6 +925,90 @@ export default function App() {
     );
   };
 
+  const handleHardwareBack = () => {
+    if (isApplying) {
+      if (applyStep === 4) {
+        setIsApplying(false);
+        setSelectedJob(null);
+        setApplyStep(1);
+        switchTab("home");
+      } else if (applyStep > 1) {
+        setApplyStep(prev => prev - 1);
+      } else {
+        setIsApplying(false);
+      }
+      return;
+    }
+
+    if (selectedJob) {
+      setSelectedJob(null);
+      setIsApplying(false);
+      setApplyStep(1);
+      return;
+    }
+
+    if (isAdvSearchOpen) {
+      closeAdvancedSearch();
+      return;
+    }
+
+    if (activeTab === "alerts" && selectedNotificationId) {
+      setSelectedNotificationId(null);
+      return;
+    }
+
+    if (activeTab === "profile" && profileSubScreen) {
+      setProfileSubScreen(null);
+      return;
+    }
+
+    if (activeTab !== "home") {
+      switchTab("home");
+      return;
+    }
+
+    // Already at the Home root with nothing open — require a second press to exit.
+    if (exitHintTimerRef.current !== null) {
+      window.clearTimeout(exitHintTimerRef.current);
+      exitHintTimerRef.current = null;
+      setShowExitHint(false);
+      void exitNativeApp();
+      return;
+    }
+
+    setShowExitHint(true);
+    exitHintTimerRef.current = window.setTimeout(() => {
+      exitHintTimerRef.current = null;
+      setShowExitHint(false);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    handleHardwareBackRef.current = handleHardwareBack;
+  });
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+
+    void addHardwareBackButtonListener(() => handleHardwareBackRef.current()).then(remove => {
+      if (cancelled) {
+        remove();
+        return;
+      }
+      cleanup = remove;
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    void syncStatusBarStyle(darkMode);
+  }, [darkMode]);
+
   useEffect(() => {
     if (!showSplash) return;
 
@@ -975,6 +1064,14 @@ export default function App() {
               isPulling={pullToRefresh.isPulling}
               isRefreshing={jobsRefreshing}
             />
+
+            {showExitHint && (
+              <div className={`absolute ${isMobileView ? "bottom-[calc(6rem+env(safe-area-inset-bottom))]" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]"} left-1/2 -translate-x-1/2 z-50 animate-fade-in pointer-events-none`}>
+                <div className="px-4 py-2 rounded-full text-[11px] font-bold shadow-lg bg-slate-900 text-white">
+                  Press back again to exit
+                </div>
+              </div>
+            )}
 
             {/* 3. APP SCREEN BODY (DYNAMIC BY TAB) */}
             <div
@@ -1357,7 +1454,10 @@ export default function App() {
                     alt="SharpJob"
                     className="w-44 max-w-[65vw] mx-auto drop-shadow-2xl"
                   />
-                  <p className="mt-3 text-white/90 text-sm font-semibold tracking-wide">
+                  <p className="mt-3 text-white text-base font-bold tracking-wide">
+                    Find your Sharp Job
+                  </p>
+                  <p className="mt-1 text-white/80 text-xs font-semibold tracking-wide">
                     By Player99 Inc.
                   </p>
                 </div>

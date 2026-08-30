@@ -92,7 +92,7 @@ export function JobCard({
           <span hidden={Boolean(job.companyLogoUrl)}><CatIcon className="h-5 w-5" /></span>
         </div>
         <div className="min-w-0 flex-1">
-          <h4 className={`text-sm font-semibold truncate ${darkMode ? "text-white" : "text-slate-800"}`}>
+          <h4 className={`text-sm font-semibold line-clamp-2 leading-snug ${darkMode ? "text-white" : "text-slate-800"}`}>
             {job.title}
           </h4>
           <p className={`text-xs mt-0.5 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>

@@ -50,7 +50,7 @@ export function TopStatusToastOverlay({
       )}
 
       {toastMessage && (
-        <div className={`absolute left-3 right-3 z-50 animate-slide-down ${isMobileView ? "top-3" : "top-12"}`}>
+        <div className={`absolute left-3 right-3 z-50 animate-slide-down ${isMobileView ? "top-[calc(0.75rem+env(safe-area-inset-top))]" : "top-[calc(3rem+env(safe-area-inset-top))]"}`}>
           <div className="bg-slate-900 text-white rounded-xl p-3 border border-slate-800 shadow-lg flex gap-3 items-start select-none">
             <img
               src={logoSrc}

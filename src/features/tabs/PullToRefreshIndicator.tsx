@@ -23,7 +23,7 @@ export function PullToRefreshIndicator({
 
   return (
     <div
-      className={`absolute left-1/2 -translate-x-1/2 z-40 pointer-events-none ${isMobileView ? "top-3" : "top-14"}`}
+      className={`absolute left-1/2 -translate-x-1/2 z-40 pointer-events-none ${isMobileView ? "top-[calc(0.75rem+env(safe-area-inset-top))]" : "top-[calc(3.5rem+env(safe-area-inset-top))]"}`}
       style={{
         opacity: isRefreshing ? 1 : progress,
         transform: `translateX(-50%) scale(${0.6 + progress * 0.4})`,

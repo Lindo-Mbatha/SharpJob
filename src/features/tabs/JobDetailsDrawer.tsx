@@ -78,7 +78,7 @@ export function JobDetailsDrawer({
     <div className={`absolute inset-0 z-40 flex flex-col animate-slide-up ${
       darkMode ? "bg-slate-950 text-slate-100" : "bg-white text-slate-800"
     }`}>
-      <div className={`h-12 px-4 flex items-center justify-between border-b shrink-0 ${
+      <div className={`min-h-12 pt-[env(safe-area-inset-top)] px-4 flex items-center justify-between border-b shrink-0 ${
         darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"
       }`}>
         <button onClick={onBack} className={`flex items-center gap-1 text-xs font-semibold ${activeAccentText}`}>
@@ -193,6 +193,13 @@ export function JobDetailsDrawer({
             </ul>
           </div>
 
+          {selectedJob.whereToApply?.trim() && (
+            <div className="space-y-1.5">
+              <h4 className={`text-xs font-bold uppercase tracking-wide ${darkMode ? "text-slate-400" : "text-slate-600"}`}>Where to Apply</h4>
+              <p className={`text-[13px] leading-relaxed ${darkMode ? "text-slate-200" : "text-slate-800"}`}>{selectedJob.whereToApply}</p>
+            </div>
+          )}
+
           <div className="space-y-1.5 pb-4">
             <h4 className={`text-xs font-bold uppercase tracking-wide ${darkMode ? "text-slate-400" : "text-slate-600"}`}>About {selectedJob.company}</h4>
             <p className={`text-[13px] leading-relaxed italic ${darkMode ? "text-slate-300" : "text-slate-700"}`}>
@@ -211,7 +218,7 @@ export function JobDetailsDrawer({
         </div>
       </div>
 
-      <div className={`p-3 border-t shrink-0 space-y-2 ${
+      <div className={`p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t shrink-0 space-y-2 ${
         darkMode ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-150"
       }`}>
         {selectedJob.isSaved && (

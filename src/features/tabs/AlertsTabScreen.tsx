@@ -254,7 +254,7 @@ export function AlertsTabScreen({
         <div className={`absolute inset-0 flex flex-col animate-slide-up ${
           darkMode ? "bg-slate-950" : "bg-white"
         }`}>
-          <div className={`h-12 px-3 flex items-center justify-between border-b shrink-0 ${
+          <div className={`min-h-12 pt-[env(safe-area-inset-top)] px-3 flex items-center justify-between border-b shrink-0 ${
             darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"
           }`}>
             <button
@@ -364,7 +364,7 @@ export function AlertsTabScreen({
             </div>
           </div>
 
-          <div className={`p-3 border-t flex items-center gap-2 shrink-0 ${
+          <div className={`p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t flex items-center gap-2 shrink-0 ${
             darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"
           }`}>
             <button

@@ -134,7 +134,7 @@ function TikTokIcon({ className }: { className?: string }) {
 
 function ReaderTopBar({ title, onBack, onBackLabel, right, dark, accentText }: { title: string; onBack: () => void; onBackLabel: string; right?: React.ReactNode; dark: boolean; accentText: string }) {
   return (
-    <div className={`h-12 px-3 flex items-center justify-between border-b shrink-0 ${dark ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
+    <div className={`min-h-12 pt-[env(safe-area-inset-top)] px-3 flex items-center justify-between border-b shrink-0 ${dark ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
       <button onClick={onBack} className={`flex items-center gap-1 text-xs font-semibold ${accentText}`}>
         <ArrowLeft className="h-4 w-4" />
         {onBackLabel}
@@ -763,7 +763,7 @@ export function ProfileTabScreen({
               />
             </div>
           </div>
-          <div className={`p-3 border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
+          <div className={`p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
             <button onClick={() => { onProfileSaved(); triggerNotification("Your profile details were saved."); setProfileSubScreen(null); }} className={`w-full h-11 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 ${activeAccentPrimary}`}>
               <Check className="h-4 w-4" /> Save profile
             </button>
@@ -1025,10 +1025,6 @@ export function ProfileTabScreen({
               <span className="text-[11px] text-slate-500 font-semibold">App version</span>
               <span className="text-[11px] text-slate-400 font-bold">v{APP_VERSION}</span>
             </div>
-
-            <button onClick={() => { if (confirm("Sign out of SharpJob on this device?")) { triggerNotification("Signed out. (Demo only - session restored on reload.)"); setProfileSubScreen(null); } }} aria-label="Sign out of SharpJob" className="w-full flex items-center justify-center gap-1.5 p-3 rounded-xl border border-red-200 bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors">
-              <Lock className="h-3.5 w-3.5" /> Sign out
-            </button>
           </div>
         </div>
       )}
@@ -1304,7 +1300,7 @@ export function ProfileTabScreen({
                 ))}
               </div>
             </div>
-            <div className={`p-3 border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
+            <div className={`p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t shrink-0 ${darkMode ? "bg-slate-950 border-slate-850" : "bg-slate-50 border-slate-100"}`}>
               <button
                 disabled={!feedbackText.trim() && feedbackRating === 0}
                 onClick={() => {

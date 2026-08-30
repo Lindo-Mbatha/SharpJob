@@ -4,6 +4,23 @@ export const PULL_TO_REFRESH_THRESHOLD = 64;
 const MAX_PULL = 96;
 const RESISTANCE = 0.5;
 
+// Walks up from the touch target to find the element actually being scrolled —
+// a screen (e.g. Explore) can nest its own overflow-y-auto list inside the
+// outer container so a pinned header can stay put while the list scrolls.
+function findScrollableAncestor(node: EventTarget | null, boundary: HTMLElement): HTMLElement {
+  let current = node instanceof HTMLElement ? node : null;
+
+  while (current && current !== boundary) {
+    if (current.scrollHeight > current.clientHeight) {
+      const overflowY = getComputedStyle(current).overflowY;
+      if (overflowY === "auto" || overflowY === "scroll") return current;
+    }
+    current = current.parentElement;
+  }
+
+  return boundary;
+}
+
 export function usePullToRefresh({
   containerRef,
   enabled,
@@ -20,21 +37,25 @@ export function usePullToRefresh({
   const startYRef = useRef<number | null>(null);
   const isPullingRef = useRef(false);
   const pullDistanceRef = useRef(0);
+  const activeScrollableRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !enabled) return;
 
     const handleTouchStart = (event: TouchEvent) => {
-      startYRef.current = el.scrollTop <= 0 ? event.touches[0].clientY : null;
+      const scrollable = findScrollableAncestor(event.target, el);
+      activeScrollableRef.current = scrollable;
+      startYRef.current = scrollable.scrollTop <= 0 ? event.touches[0].clientY : null;
       isPullingRef.current = false;
     };
 
     const handleTouchMove = (event: TouchEvent) => {
       if (startYRef.current === null) return;
 
+      const scrollable = activeScrollableRef.current ?? el;
       const delta = event.touches[0].clientY - startYRef.current;
-      if (delta <= 0 || el.scrollTop > 0) {
+      if (delta <= 0 || scrollable.scrollTop > 0) {
         startYRef.current = null;
         isPullingRef.current = false;
         pullDistanceRef.current = 0;
