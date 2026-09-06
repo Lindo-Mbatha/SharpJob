@@ -43,13 +43,13 @@ export function HomeTabScreen({
             <img
               src={logoSrc}
               alt="SharpJob logo"
-              className="h-8 w-8 rounded-lg shrink-0 object-cover"
+              className="h-12 w-12 rounded-lg shrink-0 object-cover"
             />
             <div className="leading-none">
-              <span className={`block font-semibold text-[15px] tracking-tight ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
+              <span className={`block font-semibold text-[22.5px] tracking-tight ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
                 SharpJob
               </span>
-              <span className="mt-1 block text-[8px] font-medium tracking-wide text-slate-400">
+              <span className="mt-1 block text-[12px] font-medium tracking-wide text-slate-400">
                 by Player99 Inc
               </span>
             </div>

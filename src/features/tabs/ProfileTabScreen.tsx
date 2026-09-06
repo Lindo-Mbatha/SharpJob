@@ -1,4 +1,6 @@
 import React from "react";
+import googlePlayIcon from "../../assets/GooglePlayIcon.png";
+import appGalleryIcon from "../../assets/AppGalleryIcon.jpeg";
 import {
   Bell,
   BellRing,
@@ -195,6 +197,7 @@ export function ProfileTabScreen({
   settingHaptics,
   helpQuery,
   helpOpenFaq,
+  helpFaqExpanded,
   feedbackText,
   feedbackCategory,
   feedbackRating,
@@ -237,6 +240,7 @@ export function ProfileTabScreen({
   setSettingHaptics,
   setHelpQuery,
   setHelpOpenFaq,
+  setHelpFaqExpanded,
   setFeedbackText,
   setFeedbackCategory,
   setFeedbackRating,
@@ -305,6 +309,7 @@ export function ProfileTabScreen({
   settingHaptics: boolean;
   helpQuery: string;
   helpOpenFaq: string | null;
+  helpFaqExpanded: boolean;
   feedbackText: string;
   feedbackCategory: FeedbackCategory;
   feedbackRating: number;
@@ -347,6 +352,7 @@ export function ProfileTabScreen({
   setSettingHaptics: React.Dispatch<React.SetStateAction<boolean>>;
   setHelpQuery: React.Dispatch<React.SetStateAction<string>>;
   setHelpOpenFaq: React.Dispatch<React.SetStateAction<string | null>>;
+  setHelpFaqExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   setFeedbackText: React.Dispatch<React.SetStateAction<string>>;
   setFeedbackCategory: React.Dispatch<React.SetStateAction<FeedbackCategory>>;
   setFeedbackRating: React.Dispatch<React.SetStateAction<number>>;
@@ -1143,15 +1149,20 @@ export function ProfileTabScreen({
 
       {profileSubScreen === "help" && (() => {
         const faqs = [
+          { id: "f5", q: "Is my data safe?", a: "SharpJob does not collect or store any of your personal data. Although you can upload a CV in the app, it is only hosted locally on your device for now, as this feature is not live yet." },
+          { id: "f7", q: "When are jobs updated on the app?", a: "New job listings are added Monday to Friday, between 12:00 and 18:00. Nothing new is posted on weekends or outside that window." },
+          { id: "f8", q: "How are government job listings sourced?", a: "SharpJob is an independent job listing platform and is not affiliated with, endorsed by, or officially representing any government department or entity. Government job listings are aggregated from publicly available official sources, with direct links provided to each original listing." },
           { id: "f1", q: "How do I apply to a job?", a: "When you tap Apply, SharpJob takes you to the job's website where you can apply directly. In-app applications are not available yet." },
           { id: "f2", q: "Can recruiters see when I update my profile?", a: "Not yet. Recruiter visibility for live profile updates is a planned feature down the line. CV uploads will also start working once employers register with us." },
           { id: "f3", q: "Why did my application status change?", a: "The app assumes you applied after you click the Apply button. You can change the status any time from the job details or saved listings." },
           { id: "f4", q: "How is Profile Strength calculated?", a: "It scores completed fields (name, headline, about, skills), a verified email, an uploaded resume and at least one external link. Hitting 100% lifts your rank in recruiter search by roughly 2.3x." },
-          { id: "f5", q: "Is my data safe?", a: "Yes. Resumes and personal details are encrypted in transit and at rest. We never sell data or use it to train external models. You can delete your account any time from Help -> Contact us." },
-          { id: "f6", q: "Why are there ads in the app?", a: "We know ads can be annoying, but they help us pay the bills and keep SharpJob free for everyone to use. We are continuously improving how ads are placed so they feel seamless and do not disturb your user experience." }
+          { id: "f6", q: "Why are there ads in the app?", a: "We know ads can be annoying, but they help us pay the bills and keep SharpJob free for everyone to use. We are continuously improving how ads are placed so they feel seamless and do not disturb your user experience." },
+          { id: "f9", q: "How are private company job listings sourced?", a: "SharpJob is not affiliated with, endorsed by, or acting on behalf of any private company or employer featured on this platform. Job listings from private companies are aggregated from publicly available sources. SharpJob does not guarantee the accuracy, completeness, or availability of any listing and is not responsible for the hiring decisions or conduct of any employer." }
         ];
         const q = helpQuery.trim().toLowerCase();
-        const visibleFaqs = q ? faqs.filter(f => (f.q + " " + f.a).toLowerCase().includes(q)) : faqs;
+        const isSearchingFaqs = q.length > 0;
+        const visibleFaqs = isSearchingFaqs ? faqs.filter(f => (f.q + " " + f.a).toLowerCase().includes(q)) : faqs;
+        const displayedFaqs = isSearchingFaqs || helpFaqExpanded ? visibleFaqs : visibleFaqs.slice(0, 3);
         return (
           <div className={`absolute inset-0 z-40 flex flex-col animate-slide-up ${darkMode ? "bg-slate-950" : "bg-white"}`}>
             <ReaderTopBar title="Help & Support" onBackLabel="Profile" onBack={() => setProfileSubScreen(null)} dark={darkMode} accentText={activeAccentText} />
@@ -1162,11 +1173,11 @@ export function ProfileTabScreen({
               </div>
 
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Frequently asked</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Frequently asked questions</p>
                 <div className="space-y-2">
                   {visibleFaqs.length === 0 ? (
                     <p className="text-[11px] text-slate-400 py-4 text-center">No articles match "{helpQuery}". Try a shorter phrase or contact us below.</p>
-                  ) : visibleFaqs.map(f => {
+                  ) : displayedFaqs.map(f => {
                     const open = helpOpenFaq === f.id;
                     return (
                       <div key={f.id} className={`rounded-xl border overflow-hidden ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
@@ -1180,6 +1191,15 @@ export function ProfileTabScreen({
                       </div>
                     );
                   })}
+                  {!isSearchingFaqs && visibleFaqs.length > 3 && (
+                    <button
+                      onClick={() => setHelpFaqExpanded(v => !v)}
+                      className={`w-full flex items-center justify-center gap-1 py-2 text-[11px] font-bold ${activeAccentText}`}
+                    >
+                      {helpFaqExpanded ? "See less" : "See more"}
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${helpFaqExpanded ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1233,15 +1253,32 @@ export function ProfileTabScreen({
 
               <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
-              <button onClick={() => window.open("https://play.google.com/store/apps/details?id=com.player99.sharpjob", "_blank")} className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg border bg-amber-50 text-amber-600 border-amber-100 flex items-center justify-center shrink-0"><Star className="h-4 w-4 fill-current" /></div>
-                  <div><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Rate SharpJob</p><p className="text-[11px] text-slate-500">Takes 10 seconds. Helps a lot.</p></div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Rate us</p>
+                <div className="space-y-2">
+                  <button onClick={() => void onRateApp()} className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
+                    <div className="flex items-center gap-2.5">
+                      <img src={googlePlayIcon} alt="Google Play" className="w-9 h-9 rounded-lg object-contain shrink-0" />
+                      <div><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Rate Us on Play Store</p><p className="text-[11px] text-slate-500">Takes 10 seconds. Helps a lot.</p></div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3.5 w-3.5 text-amber-400 fill-current" />)}
+                    </div>
+                  </button>
+
+                  <button onClick={() => window.open("https://urldra.cloud.huawei.com/BY7yEBJj3i", "_blank")} className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition-colors ${darkMode ? "bg-slate-900/60 border-slate-800 hover:bg-slate-900" : "bg-white border-slate-200 hover:bg-slate-50"}`}>
+                    <div className="flex items-center gap-2.5">
+                      <img src={appGalleryIcon} alt="Huawei AppGallery" className="w-9 h-9 rounded-lg object-contain shrink-0" />
+                      <div><p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Rate Us on App Gallery</p><p className="text-[11px] text-slate-500">Takes 10 seconds. Helps a lot.</p></div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3.5 w-3.5 text-amber-400 fill-current" />)}
+                    </div>
+                  </button>
                 </div>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3.5 w-3.5 text-amber-400 fill-current" />)}
-                </div>
-              </button>
+              </div>
+
+              <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
 
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Send feedback</label>

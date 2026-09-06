@@ -166,6 +166,7 @@ export default function App() {
     settingHaptics,
     helpQuery,
     helpOpenFaq,
+    helpFaqExpanded,
     feedbackText,
     feedbackCategory,
     feedbackRating,
@@ -210,6 +211,7 @@ export default function App() {
     setSettingHaptics,
     setHelpQuery,
     setHelpOpenFaq,
+    setHelpFaqExpanded,
     setFeedbackText,
     setFeedbackCategory,
     setFeedbackRating,
@@ -1076,7 +1078,7 @@ export default function App() {
             {/* 3. APP SCREEN BODY (DYNAMIC BY TAB) */}
             <div
               ref={scrollContainerRef}
-              className={`flex-1 overflow-y-auto no-scrollbar flex flex-col ${isMobileView ? "pb-20" : "pb-16"} relative`}
+              className={`flex-1 overflow-y-auto no-scrollbar flex flex-col ${isMobileView ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(4rem+env(safe-area-inset-bottom))]"} relative`}
               style={{
                 transform: pullToRefresh.pullDistance > 0 ? `translateY(${pullToRefresh.pullDistance}px)` : undefined,
                 transition: pullToRefresh.isPulling ? "none" : "transform 0.25s ease"
@@ -1260,6 +1262,7 @@ export default function App() {
                   settingHaptics={settingHaptics}
                   helpQuery={helpQuery}
                   helpOpenFaq={helpOpenFaq}
+                  helpFaqExpanded={helpFaqExpanded}
                   feedbackText={feedbackText}
                   feedbackCategory={feedbackCategory}
                   feedbackRating={feedbackRating}
@@ -1302,6 +1305,7 @@ export default function App() {
                   setSettingHaptics={setSettingHaptics}
                   setHelpQuery={setHelpQuery}
                   setHelpOpenFaq={setHelpOpenFaq}
+                  setHelpFaqExpanded={setHelpFaqExpanded}
                   setFeedbackText={setFeedbackText}
                   setFeedbackCategory={setFeedbackCategory}
                   setFeedbackRating={setFeedbackRating}

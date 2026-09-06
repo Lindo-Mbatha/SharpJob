@@ -1,0 +1,49 @@
+diff --git a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/util/AssetUtil.java b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/util/AssetUtil.java
+index 3a7043b..f7f3bec 100644
+--- a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/util/AssetUtil.java
++++ b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/util/AssetUtil.java
+@@ -254,9 +254,42 @@ public final class AssetUtil {
+      *
+      * @param uri Internal image URI
+      */
++    // Notification/shortcut icons are never displayed larger than this, so decoding a
++    // source image above this resolution just wastes memory (unbounded, since uri can
++    // point at an arbitrarily large user-picked image).
++    private static final int ICON_MAX_DIMENSION_PX = 256;
++
+     public Bitmap getIconFromUri(Uri uri) throws IOException {
+-        InputStream input = context.getContentResolver().openInputStream(uri);
+-        return BitmapFactory.decodeStream(input);
++        BitmapFactory.Options boundsOptions = new BitmapFactory.Options();
++        boundsOptions.inJustDecodeBounds = true;
++        try (InputStream boundsInput = context.getContentResolver().openInputStream(uri)) {
++            BitmapFactory.decodeStream(boundsInput, null, boundsOptions);
++        }
++
++        BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
++        decodeOptions.inSampleSize = calculateInSampleSize(boundsOptions, ICON_MAX_DIMENSION_PX, ICON_MAX_DIMENSION_PX);
++        try (InputStream input = context.getContentResolver().openInputStream(uri)) {
++            return BitmapFactory.decodeStream(input, null, decodeOptions);
++        }
++    }
++
++    // Standard power-of-two downsampling factor calculation, per Android's own
++    // "Loading Large Bitmaps Efficiently" guide.
++    private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
++        int height = options.outHeight;
++        int width = options.outWidth;
++        int inSampleSize = 1;
++
++        if (height > reqHeight || width > reqWidth) {
++            int halfHeight = height / 2;
++            int halfWidth = width / 2;
++
++            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
++                inSampleSize *= 2;
++            }
++        }
++
++        return inSampleSize;
+     }
+ 
+     /**

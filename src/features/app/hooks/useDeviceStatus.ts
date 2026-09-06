@@ -1,4 +1,14 @@
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+
+// On the actual installed/emulated native app, we're always in "mobile view" —
+// there's no ambiguity to resolve from viewport dimensions, which can briefly (or
+// permanently, e.g. in Android Studio's device-mirroring surface) report desktop-sized
+// values before/without a resize event ever correcting them. The viewport-width guess
+// is only meaningful for the web/dev-server preview, where there's no native platform.
+function computeIsMobileView(): boolean {
+  return Capacitor.isNativePlatform() || Math.min(window.innerWidth, window.innerHeight) < 640;
+}
 
 export function useDeviceStatus() {
   const [phoneTime, setPhoneTime] = useState<string>("09:41");
@@ -6,10 +16,17 @@ export function useDeviceStatus() {
   const [batteryCharging, setBatteryCharging] = useState<boolean>(false);
   const [networkLabel, setNetworkLabel] = useState<string>("Wi-Fi");
   const [networkOnline, setNetworkOnline] = useState<boolean>(true);
-  const [isMobileView, setIsMobileView] = useState<boolean>(() => Math.min(window.innerWidth, window.innerHeight) < 640);
+  const [isMobileView, setIsMobileView] = useState<boolean>(computeIsMobileView);
 
   useEffect(() => {
-    const handleResize = () => setIsMobileView(Math.min(window.innerWidth, window.innerHeight) < 640);
+    // Re-checked post-mount (rather than trusting only the lazy useState initializer)
+    // in case the native bridge injects window.Capacitor slightly after our first render.
+    if (Capacitor.isNativePlatform()) {
+      setIsMobileView(true);
+      return;
+    }
+
+    const handleResize = () => setIsMobileView(computeIsMobileView());
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);

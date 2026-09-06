@@ -1,0 +1,64 @@
+diff --git a/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/LocalNotification.kt b/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/LocalNotification.kt
+index 7646cc9..695b251 100644
+--- a/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/LocalNotification.kt
++++ b/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/LocalNotification.kt
+@@ -2,6 +2,7 @@ package com.capacitorjs.plugins.localnotifications
+ 
+ import android.content.ContentResolver
+ import android.content.Context
++import android.content.res.Resources
+ import android.graphics.Bitmap
+ import android.graphics.BitmapFactory
+ import com.getcapacitor.JSArray
+@@ -86,7 +87,7 @@ class LocalNotification {
+     fun resolveLargeIcon(context: Context): Bitmap? {
+         largeIcon?.let {
+             val resId = AssetUtil.getResourceID(context, it, "drawable")
+-            return BitmapFactory.decodeResource(context.resources, resId)
++            return decodeSampledBitmapFromResource(context.resources, resId, LARGE_ICON_MAX_DIMENSION_PX, LARGE_ICON_MAX_DIMENSION_PX)
+         }
+         return null
+     }
+@@ -110,6 +111,42 @@ class LocalNotification {
+ 
+     companion object {
+ 
++        // The large icon is never displayed larger than this, so decoding the source
++        // drawable above this resolution just wastes memory (unbounded, since a consumer
++        // can point largeIcon at any drawable, including a large arbitrary image asset).
++        private const val LARGE_ICON_MAX_DIMENSION_PX = 256
++
++        // Standard power-of-two downsampling factor calculation, per Android's own
++        // "Loading Large Bitmaps Efficiently" guide.
++        private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
++            val height = options.outHeight
++            val width = options.outWidth
++            var inSampleSize = 1
++
++            if (height > reqHeight || width > reqWidth) {
++                val halfHeight = height / 2
++                val halfWidth = width / 2
++
++                while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
++                    inSampleSize *= 2
++                }
++            }
++
++            return inSampleSize
++        }
++
++        private fun decodeSampledBitmapFromResource(res: Resources, resId: Int, reqWidth: Int, reqHeight: Int): Bitmap? {
++            return BitmapFactory.Options().run {
++                inJustDecodeBounds = true
++                BitmapFactory.decodeResource(res, resId, this)
++
++                inSampleSize = calculateInSampleSize(this, reqWidth, reqHeight)
++
++                inJustDecodeBounds = false
++                BitmapFactory.decodeResource(res, resId, this)
++            }
++        }
++
+         fun buildNotificationList(call: PluginCall): MutableList<LocalNotification>? {
+             val notificationArray = call.getArray("notifications")
+             if (notificationArray == null) {

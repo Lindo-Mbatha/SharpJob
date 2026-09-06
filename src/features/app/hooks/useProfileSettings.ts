@@ -143,6 +143,7 @@ export function useProfileSettings() {
 
   const [helpQuery, setHelpQuery] = useState<string>("");
   const [helpOpenFaq, setHelpOpenFaq] = useState<string | null>(null);
+  const [helpFaqExpanded, setHelpFaqExpanded] = useState<boolean>(false);
   const [feedbackText, setFeedbackText] = useState<string>("");
   const [feedbackCategory, setFeedbackCategory] = useState<FeedbackCategory>("Suggestion");
   const [feedbackRating, setFeedbackRating] = useState<number>(0);
@@ -371,6 +372,7 @@ export function useProfileSettings() {
       settingHaptics,
       helpQuery,
       helpOpenFaq,
+      helpFaqExpanded,
       feedbackText,
       feedbackCategory,
       feedbackRating,
@@ -414,6 +416,7 @@ export function useProfileSettings() {
       setSettingHaptics,
       setHelpQuery,
       setHelpOpenFaq,
+      setHelpFaqExpanded,
       setFeedbackText,
       setFeedbackCategory,
       setFeedbackRating,
