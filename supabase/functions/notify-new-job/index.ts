@@ -102,7 +102,10 @@ Deno.serve(async (req: Request) => {
   try {
     const payload = await req.json() as JobsInsertWebhookPayload;
 
-    if (payload.type !== "INSERT" || payload.table !== "jobs") {
+    // The Jobs table was created with a capitalized name, so the webhook payload's
+    // table field arrives as "Jobs", not "jobs" — compare case-insensitively so this
+    // doesn't silently break again if the table is ever renamed with different casing.
+    if (payload.type !== "INSERT" || payload.table?.toLowerCase() !== "jobs") {
       return new Response(JSON.stringify({ skipped: true, reason: "not a jobs insert" }), { status: 200 });
     }
 

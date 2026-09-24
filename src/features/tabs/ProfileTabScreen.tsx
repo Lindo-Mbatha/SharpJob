@@ -161,6 +161,9 @@ export function ProfileTabScreen({
   previousListingsStorageBytes,
   previousListingsCount,
   onClearPreviousListings,
+  notificationsStorageBytes,
+  notificationsCount,
+  onClearNotifications,
   profileStrengthLabel,
   profileSubScreen,
   applicantName,
@@ -273,6 +276,9 @@ export function ProfileTabScreen({
   previousListingsStorageBytes: number;
   previousListingsCount: number;
   onClearPreviousListings: () => void;
+  notificationsStorageBytes: number;
+  notificationsCount: number;
+  onClearNotifications: () => void;
   profileStrengthLabel: string;
   profileSubScreen: ProfileSubScreen;
   applicantName: string;
@@ -1022,6 +1028,37 @@ export function ProfileTabScreen({
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 {previousListingsCount > 0 ? `Clear Data (${previousListingsCount})` : "Clear Data"}
+              </button>
+            </div>
+
+            <div className={`border-t ${darkMode ? "border-slate-850" : "border-slate-100"}`} />
+
+            <div className={`p-3 rounded-xl border ${darkMode ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg border bg-indigo-50 text-indigo-600 border-indigo-100 flex items-center justify-center shrink-0"><Bell className="h-4 w-4" /></div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[13px] font-bold ${darkMode ? "text-white" : "text-slate-800"}`}>Notifications storage</p>
+                  <p className="text-[11px] text-slate-500">Alert history kept on this device.</p>
+                </div>
+                <span className={`text-[11px] font-bold px-2 py-1 rounded-lg border shrink-0 ${darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-700"}`}>
+                  {formatStorageSize(notificationsStorageBytes)}
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={notificationsCount === 0}
+                onClick={() => {
+                  const confirmed = confirm(
+                    `Clear all ${notificationsCount} notification${notificationsCount === 1 ? "" : "s"}?\n\nThis permanently deletes your alert history kept on this device and can't be undone.`
+                  );
+                  if (!confirmed) return;
+                  onClearNotifications();
+                }}
+                aria-label="Clear all Notifications data from this device"
+                className={`mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${darkMode ? "border-rose-900/60 text-rose-400 hover:bg-rose-950/40" : "border-rose-300 text-rose-600 hover:bg-rose-50"}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {notificationsCount > 0 ? `Clear Data (${notificationsCount})` : "Clear Data"}
               </button>
             </div>
 

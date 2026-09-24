@@ -8,8 +8,8 @@ import { readStoredValue, writeStoredValue } from "./useProfileSettings";
 const ALERTS_KEY = "sharpjob.alerts.v1";
 
 const INITIAL_NOTIFICATIONS: AlertNotification[] = [
-  { id: "1", title: "Welcome to SharpJob! 🎉", kind: "system", category: "general", desc: "Your account is live. Start with the Home feed for a curated shortlist, or jump into Explore to dial things in with Advanced Search. Pro tip: tap the bookmark on any card to build a save-list you can apply to later in a single tap.", time: "Just now", read: false },
-  { id: "2", title: "Profile Setup Is Optional ℹ️", kind: "system", category: "general", desc: "You can edit your details any time in Edit Profile under the Profile tab. Pro tip: Add your target job position in your Headline to get instant notifications when matching roles become available. This is optional for now, and some profile-based recruiter features will roll out in future updates.", time: "Just now", read: false }
+  { id: "1", title: "Welcome to SharpJob! 🎉", kind: "system", category: "general", desc: "Your account is live. Start with the Home feed for a curated shortlist, or jump into Explore to dial things in with Advanced Search. Pro tip: tap the bookmark on any card to build a save-list you can apply to later in a single tap.", createdAt: Date.now(), read: false },
+  { id: "2", title: "Profile Setup Is Optional ℹ️", kind: "system", category: "general", desc: "You can edit your details any time in Edit Profile under the Profile tab. Pro tip: Add your target job position in your Headline to get instant notifications when matching roles become available. This is optional for now, and some profile-based recruiter features will roll out in future updates.", createdAt: Date.now(), read: false }
 ];
 
 export function useAlerts({
@@ -35,13 +35,26 @@ export function useAlerts({
 
         const parsedAlerts = JSON.parse(storedAlerts) as unknown;
         if (Array.isArray(parsedAlerts)) {
-          setNotifications(parsedAlerts.filter((alert): alert is AlertNotification =>
-            typeof alert?.id === "string" &&
-            typeof alert.title === "string" &&
-            typeof alert.desc === "string" &&
-            typeof alert.time === "string" &&
-            typeof alert.read === "boolean"
-          ));
+          setNotifications(parsedAlerts
+            .filter((alert): alert is Record<string, unknown> =>
+              typeof alert?.id === "string" &&
+              typeof (alert as Record<string, unknown>).title === "string" &&
+              typeof (alert as Record<string, unknown>).desc === "string" &&
+              typeof (alert as Record<string, unknown>).read === "boolean"
+            )
+            // Alerts persisted before createdAt existed only had a static "time" label —
+            // there's no real timestamp to recover, so treat them as received right now
+            // rather than dropping a user's alert history on this migration.
+            .map((alert): AlertNotification => ({
+              id: alert.id as string,
+              title: alert.title as string,
+              desc: alert.desc as string,
+              read: alert.read as boolean,
+              createdAt: typeof alert.createdAt === "number" ? alert.createdAt : Date.now(),
+              jobId: typeof alert.jobId === "string" ? alert.jobId : undefined,
+              kind: alert.kind as AlertNotification["kind"],
+              category: alert.category as AlertNotification["category"]
+            })));
         }
       } catch {
         // Keep default alerts when the stored alert history is unavailable or corrupt.
@@ -86,7 +99,7 @@ export function useAlerts({
         id: newId,
         title: "SharpJob Alert 🔔",
         desc: message,
-        time: "Just now",
+        createdAt: Date.now(),
         read: false,
         category
       };

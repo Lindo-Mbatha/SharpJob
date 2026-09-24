@@ -12,7 +12,7 @@ const seedNotifications: AlertNotification[] = [
     id: "n1",
     title: "Unread Match",
     desc: "You have a new match",
-    time: "now",
+    createdAt: Date.now(),
     read: false,
     kind: "match"
   },
@@ -20,7 +20,7 @@ const seedNotifications: AlertNotification[] = [
     id: "n2",
     title: "Read Update",
     desc: "Already read",
-    time: "1h",
+    createdAt: Date.now() - 60 * 60 * 1000,
     read: true,
     kind: "system"
   }

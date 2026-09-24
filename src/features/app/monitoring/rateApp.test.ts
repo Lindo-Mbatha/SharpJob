@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const requestReviewMock = vi.fn<[], Promise<void>>();
 const openAppStoreMock = vi.fn<[], Promise<void>>();
 const captureErrorMock = vi.fn();
 const captureRecoverableErrorMock = vi.fn();
@@ -14,7 +13,6 @@ vi.mock("@capacitor/core", () => ({
 
 vi.mock("@capawesome/capacitor-app-review", () => ({
   AppReview: {
-    requestReview: () => requestReviewMock(),
     openAppStore: () => openAppStoreMock()
   }
 }));
@@ -32,13 +30,8 @@ describe("requestAppRating fallback order", () => {
     vi.clearAllMocks();
   });
 
-  it("falls back in order: requestReview -> openAppStore -> web redirect", async () => {
+  it("falls back in order: openAppStore -> web redirect", async () => {
     const flow: string[] = [];
-
-    requestReviewMock.mockImplementation(async () => {
-      flow.push("requestReview");
-      throw new Error("requestReview failed");
-    });
 
     openAppStoreMock.mockImplementation(async () => {
       flow.push("openAppStore");
@@ -53,10 +46,22 @@ describe("requestAppRating fallback order", () => {
     const notify = vi.fn();
     await requestAppRating(notify);
 
-    expect(flow).toEqual(["requestReview", "openAppStore", "window.open"]);
-    expect(captureErrorMock).toHaveBeenCalledTimes(2);
+    expect(flow).toEqual(["openAppStore", "window.open"]);
+    expect(captureErrorMock).toHaveBeenCalledTimes(1);
     expect(captureRecoverableErrorMock).not.toHaveBeenCalled();
     expect(notify).toHaveBeenCalledWith("Opening Google Play rating page.");
     expect(openSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call the web fallback when openAppStore succeeds", async () => {
+    openAppStoreMock.mockResolvedValue(undefined);
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+    const notify = vi.fn();
+    await requestAppRating(notify);
+
+    expect(openAppStoreMock).toHaveBeenCalledTimes(1);
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith("Opening your app store rating page.");
   });
 });

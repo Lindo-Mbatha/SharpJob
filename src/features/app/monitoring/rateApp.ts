@@ -13,14 +13,12 @@ export async function requestAppRating(triggerNotification: (message: string) =>
   const platform = Capacitor.getPlatform();
   trackEvent("rate_app_tapped", { platform });
 
-  try {
-    await AppReview.requestReview();
-    trackEvent("rate_app_in_app_review_requested", { platform });
-    return;
-  } catch (error) {
-    captureError(error, { context: "rate_app_request_review", platform });
-  }
-
+  // Deliberately not calling AppReview.requestReview() here: Google's Play Core review
+  // API always resolves successfully even when it silently shows no dialog at all (quota
+  // exhausted, app not installed via Play Store, etc. — this is intentional on Google's
+  // part so apps can't detect/react to whether the prompt was shown). Treating that
+  // resolution as "done" meant tapping this button could do visibly nothing. Going
+  // straight to opening the store listing is what the button actually promises.
   try {
     await AppReview.openAppStore();
     trackEvent("rate_app_store_opened", { platform, channel: "native_plugin" });

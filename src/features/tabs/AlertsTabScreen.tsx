@@ -2,9 +2,14 @@ import React from "react";
 import { ArrowLeft, BellRing, Check, ChevronRight, Trash2 } from "lucide-react";
 import { AlertNotification } from "../alerts/types";
 import { AlertCategory } from "../alerts/types";
+import { formatAlertTime } from "../alerts/selectors";
 import { Job } from "../listings/types";
 import { getCategoryStyles } from "../listings/utils";
 import { AlertsFilter } from "../app/types/domain";
+
+// How often the displayed alert times refresh while this screen stays open, so
+// "Just now" flips over to a clock time (and days-ago counts advance) live.
+const ALERT_TIME_REFRESH_MS = 15000;
 
 export function AlertsTabScreen({
   darkMode,
@@ -47,6 +52,12 @@ export function AlertsTabScreen({
   });
   const unreadCount = notifications.filter(n => !n.read).length;
   const linkedJob = selectedNotif?.jobId ? jobs.find(j => j.id === selectedNotif.jobId) || null : null;
+
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), ALERT_TIME_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, []);
   const filterDragRef = React.useRef<{
     active: boolean;
     pointerId: number | null;
@@ -227,7 +238,7 @@ export function AlertsTabScreen({
                         )}
                       </h4>
                       <span className="text-[9px] text-slate-400 shrink-0 font-semibold tracking-wide">
-                        {n.time}
+                        {formatAlertTime(n.createdAt, now)}
                       </span>
                     </div>
                     <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
@@ -293,7 +304,7 @@ export function AlertsTabScreen({
               }`}>
                 {getAlertCategory(selectedNotif)} alert
               </span>
-              <span className="text-[10px] text-slate-400 font-semibold">{selectedNotif.time}</span>
+              <span className="text-[10px] text-slate-400 font-semibold">{formatAlertTime(selectedNotif.createdAt, now)}</span>
               {selectedNotif.read && (
                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider ml-auto flex items-center gap-1">
                   <Check className="h-3 w-3" /> read

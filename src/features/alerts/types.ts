@@ -5,7 +5,7 @@ export interface AlertNotification {
   id: string;
   title: string;
   desc: string;
-  time: string;
+  createdAt: number;
   read: boolean;
   jobId?: string;
   kind?: AlertKind;

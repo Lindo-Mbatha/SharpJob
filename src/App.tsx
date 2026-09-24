@@ -7,6 +7,7 @@ import { useJobs } from "./features/listings/useJobs";
 import { Job, PreviousSavedListing } from "./features/listings/types";
 import { getActiveJobs, getActiveSavedJobs, getPreviousSavedListings, parseJobCloseDate, sortJobsAlphabetically, sortJobsByDatePostedDesc } from "./features/listings/utils";
 import { countAppliedJobs, countSavedVisible, getPreviousListingsStorageBytes, paginateItems } from "./features/listings/selectors";
+import { getNotificationsStorageBytes } from "./features/alerts/selectors";
 import { HomeTabScreen } from "./features/tabs/HomeTabScreen";
 import { ExploreTabScreen } from "./features/tabs/ExploreTabScreen";
 import { SavedTabScreen } from "./features/tabs/SavedTabScreen";
@@ -396,7 +397,7 @@ export default function App() {
             id: `new-match-${Date.now()}-${index}`,
             title: `New match: ${job.title}`,
             desc: `New headline match for "${applicantHeadline.trim()}". ${job.company} has just added this role. Open the job card to view the listing.`,
-            time: "Just now",
+            createdAt: Date.now(),
             read: false,
             jobId: job.id,
             kind: "match" as const,
@@ -437,7 +438,7 @@ export default function App() {
               id: `interview-${job.id}-${hoursBefore}-${Date.now()}`,
               title,
               desc: `Your interview with ${job.company} is coming up. Review the job details and prepare your application notes.`,
-              time: "Just now",
+              createdAt: Date.now(),
               read: false,
               jobId: job.id,
               kind: "interview",
@@ -477,7 +478,7 @@ export default function App() {
               id: `closing-${job.id}-${daysBefore}-${Date.now()}`,
               title,
               desc: `${job.title} at ${job.company} is still in your Saved for later list. Apply before the closing date.`,
-              time: "Just now",
+              createdAt: Date.now(),
               read: false,
               jobId: job.id,
               kind: "reminder",
@@ -710,6 +711,7 @@ export default function App() {
   const savedVisibleCount = countSavedVisible(activeSavedJobs, previousSavedListings);
   const appliedJobsCount = countAppliedJobs(jobs);
   const previousListingsStorageBytes = getPreviousListingsStorageBytes(previousSavedListings);
+  const notificationsStorageBytes = getNotificationsStorageBytes(notifications);
 
   useEffect(() => {
     setHomePage(prev => Math.min(prev, homePagination.totalPages));
@@ -809,6 +811,12 @@ export default function App() {
     handleClearPreviousListings(jobIds);
   };
 
+  const onClearNotificationsTracked = () => {
+    trackEvent("alerts_clear_all", { count: notifications.length });
+    setNotifications([]);
+    setSelectedNotificationId(null);
+  };
+
   const onApplyOutboundTracked = (job: Job, mode: ApplyOutboundMode) => {
     trackEvent("job_apply_outbound", {
       job_id: job.id,
@@ -878,7 +886,7 @@ export default function App() {
           id: `headline-${Date.now()}-${index}`,
           title: `Headline match: ${job.title}`,
           desc: `Headline match for "${headline.trim()}". ${job.company} is hiring for this role. Open the job card to view the full listing.`,
-          time: "Just now",
+          createdAt: Date.now(),
           read: false,
           jobId: job.id,
           kind: "match" as const,
@@ -1226,6 +1234,9 @@ export default function App() {
                   previousListingsStorageBytes={previousListingsStorageBytes}
                   previousListingsCount={previousSavedListings.length}
                   onClearPreviousListings={onClearPreviousListingsTracked}
+                  notificationsStorageBytes={notificationsStorageBytes}
+                  notificationsCount={notifications.length}
+                  onClearNotifications={onClearNotificationsTracked}
                   profileStrengthLabel={profileStrengthLabel}
                   profileSubScreen={profileSubScreen}
                   applicantName={applicantName}
